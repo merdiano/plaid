@@ -11,4 +11,4 @@ pressed.
 - `FancyQuoteSpan` A quote span with a nicer presentation
 - `ImageLoadingSpan` A simple text span used to mark text that will be replaced by an image once it
 has been downloaded
-- `LoadImageCallback` a callback mechanism for loading images
+- `LoadImageCallback` a callback mechanism for loading thumbnail_images

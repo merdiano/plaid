@@ -1,19 +1,3 @@
-/*
- * Copyright 2015 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package io.plaidapp.ui;
 
 import android.animation.ValueAnimator;
@@ -52,7 +36,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.load.DataSource;
@@ -69,21 +52,19 @@ import butterknife.BindDimen;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.plaidapp.R;
-import io.plaidapp.data.api.dribbble.DribbbleService;
 import io.plaidapp.data.api.dribbble.model.Comment;
-import io.plaidapp.data.api.dribbble.model.Like;
-import io.plaidapp.data.api.dribbble.model.Shot;
-import io.plaidapp.data.prefs.DribbblePrefs;
+import io.plaidapp.data.api.orientnews.model.Image;
+import io.plaidapp.data.api.orientnews.model.Images;
+import io.plaidapp.data.api.orientnews.model.News;
+import io.plaidapp.data.prefs.OrientPrefs;
 import io.plaidapp.ui.recyclerview.Divided;
 import io.plaidapp.ui.recyclerview.InsetDividerDecoration;
 import io.plaidapp.ui.recyclerview.SlideInItemAnimator;
-import io.plaidapp.ui.transitions.FabTransform;
 import io.plaidapp.ui.widget.AuthorTextView;
 import io.plaidapp.ui.widget.CheckableImageButton;
 import io.plaidapp.ui.widget.ElasticDragDismissFrameLayout;
 import io.plaidapp.ui.widget.FABToggle;
 import io.plaidapp.ui.widget.FabOverlapTextView;
-import io.plaidapp.ui.widget.ForegroundImageView;
 import io.plaidapp.ui.widget.ParallaxScrimageView;
 import io.plaidapp.util.ColorUtils;
 import io.plaidapp.util.HtmlUtils;
@@ -101,19 +82,27 @@ import retrofit2.Response;
 import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
 import static io.plaidapp.util.AnimUtils.getFastOutSlowInInterpolator;
 
-public class DribbbleShot extends Activity {
+/**
+ * Created by merdan on 6/10/18.
+ */
 
+public class OrientNewsActivity extends Activity {
     public final static String EXTRA_SHOT = "EXTRA_SHOT";
     public final static String RESULT_EXTRA_SHOT_ID = "RESULT_EXTRA_SHOT_ID";
     private static final int RC_LOGIN_LIKE = 0;
     private static final int RC_LOGIN_COMMENT = 1;
     private static final float SCRIM_ADJUSTMENT = 0.075f;
 
-    @BindView(R.id.draggable_frame) ElasticDragDismissFrameLayout draggableFrame;
-    @BindView(R.id.back) ImageButton back;
-    @BindView(R.id.shot) ParallaxScrimageView imageView;
-    @BindView(R.id.dribbble_comments) RecyclerView commentsList;
-    @BindView(R.id.fab_heart) FABToggle fab;
+    @BindView(R.id.draggable_frame_o)
+    ElasticDragDismissFrameLayout draggableFrame;
+    @BindView(R.id.back_o)
+    ImageButton back;
+    @BindView(R.id.news)
+    ParallaxScrimageView imageView;
+    @BindView(R.id.dribbble_comments_o)
+    RecyclerView commentsList;
+    @BindView(R.id.fab_heart_o)
+    FABToggle fab;
     View shotDescription;
     View shotSpacer;
     Button likeCount;
@@ -130,21 +119,22 @@ public class DribbbleShot extends Activity {
     private ImageView userAvatar;
     private ElasticDragDismissFrameLayout.SystemChromeFader chromeFader;
 
-    Shot shot;
+    //Shot shot;
+    News news;
     int fabOffset;
-    DribbblePrefs dribbblePrefs;
+    OrientPrefs orientPrefs;
     boolean performingLike;
     boolean allowComment;
-    CommentsAdapter adapter;
-    CommentAnimator commentAnimator;
+    OrientNewsActivity.CommentsAdapter adapter;
+    OrientNewsActivity.CommentAnimator commentAnimator;
     @BindDimen(R.dimen.large_avatar_size) int largeAvatarSize;
     @BindDimen(R.dimen.z_card) int cardElevation;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_dribbble_shot);
-        dribbblePrefs = DribbblePrefs.get(this);
+        setContentView(R.layout.activity_orientnews);
+        orientPrefs = OrientPrefs.get(this);
         ButterKnife.bind(this);
         shotDescription = getLayoutInflater().inflate(R.layout.dribbble_shot_description,
                 commentsList, false);
@@ -172,7 +162,7 @@ public class DribbbleShot extends Activity {
 
         final Intent intent = getIntent();
         if (intent.hasExtra(EXTRA_SHOT)) {
-            shot = intent.getParcelableExtra(EXTRA_SHOT);
+            news = intent.getParcelableExtra(EXTRA_SHOT);
             bindShot(true);
         } else if (intent.getData() != null) {
             final HttpUrl url = HttpUrl.parse(intent.getDataString());
@@ -181,16 +171,16 @@ public class DribbbleShot extends Activity {
                     final String shotPath = url.pathSegments().get(1);
                     final long id = Long.parseLong(shotPath.substring(0, shotPath.indexOf("-")));
 
-                    final Call<Shot> shotCall = dribbblePrefs.getApi().getShot(id);
-                    shotCall.enqueue(new Callback<Shot>() {
+                    final Call<News> shotCall = orientPrefs.getApi().getPost(id);
+                    shotCall.enqueue(new Callback<News>() {
                         @Override
-                        public void onResponse(Call<Shot> call, Response<Shot> response) {
-                            shot = response.body();
+                        public void onResponse(Call<News> call, Response<News> response) {
+                            news = response.body();
                             bindShot(false);
                         }
 
                         @Override
-                        public void onFailure(Call<Shot> call, Throwable t) {
+                        public void onFailure(Call<News> call, Throwable t) {
                             reportUrlError();
                         }
                     });
@@ -210,6 +200,11 @@ public class DribbbleShot extends Activity {
             checkLiked();
         }
         draggableFrame.addListener(chromeFader);
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
     }
 
     @Override
@@ -250,49 +245,50 @@ public class DribbbleShot extends Activity {
 
     @Override @TargetApi(Build.VERSION_CODES.M)
     public void onProvideAssistContent(AssistContent outContent) {
-        outContent.setWebUri(Uri.parse(shot.url));
+        outContent.setWebUri(Uri.parse(news.url));
     }
 
-    public void postComment(View view) {
-        if (dribbblePrefs.isLoggedIn()) {
-            if (TextUtils.isEmpty(enterComment.getText())) return;
-            enterComment.setEnabled(false);
-            final Call<Comment> postCommentCall = dribbblePrefs.getApi().postComment(
-                    shot.id, enterComment.getText().toString().trim());
-            postCommentCall.enqueue(new Callback<Comment>() {
-                @Override
-                public void onResponse(Call<Comment> call, Response<Comment> response) {
-                    loadComments();
-                    enterComment.getText().clear();
-                    enterComment.setEnabled(true);
-                }
-
-                @Override
-                public void onFailure(Call<Comment> call, Throwable t) {
-                    enterComment.setEnabled(true);
-                }
-            });
-        } else {
-            Intent login = new Intent(DribbbleShot.this, DribbbleLogin.class);
-            FabTransform.addExtras(login, ContextCompat.getColor(
-                    DribbbleShot.this, R.color.background_light), R.drawable.ic_comment_add);
-            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(
-                    DribbbleShot.this, postComment, getString(R.string.transition_dribbble_login));
-            startActivityForResult(login, RC_LOGIN_COMMENT, options.toBundle());
-        }
-    }
+//    public void postComment(View view) {
+//        if (dribbblePrefs.isLoggedIn()) {
+//            if (TextUtils.isEmpty(enterComment.getText())) return;
+//            enterComment.setEnabled(false);
+//            final Call<Comment> postCommentCall = dribbblePrefs.getApi().postComment(
+//                    shot.id, enterComment.getText().toString().trim());
+//            postCommentCall.enqueue(new Callback<Comment>() {
+//                @Override
+//                public void onResponse(Call<Comment> call, Response<Comment> response) {
+//                    loadComments();
+//                    enterComment.getText().clear();
+//                    enterComment.setEnabled(true);
+//                }
+//
+//                @Override
+//                public void onFailure(Call<Comment> call, Throwable t) {
+//                    enterComment.setEnabled(true);
+//                }
+//            });
+//        } else {
+//            Intent login = new Intent(OrientNewsActivity.this, DribbbleLogin.class);
+//            FabTransform.addExtras(login, ContextCompat.getColor(
+//                    OrientNewsActivity.this, R.color.background_light), R.drawable.ic_comment_add);
+//            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(
+//                    OrientNewsActivity.this, postComment, getString(R.string.transition_dribbble_login));
+//            startActivityForResult(login, RC_LOGIN_COMMENT, options.toBundle());
+//        }
+//    }
 
     void bindShot(final boolean postponeEnterTransition) {
         final Resources res = getResources();
 
         // load the main image
-        final int[] imageSize = shot.images.bestSize();
+//        final int[] imageSize = shot.thumbnail_images.bestSize();
+        Image pic = news.thumbnail_images.medium;
         GlideApp.with(this)
-                .load(shot.images.best())
+                .load(pic.url)
                 .listener(shotLoadListener)
                 .diskCacheStrategy(DiskCacheStrategy.DATA)
                 .priority(Priority.IMMEDIATE)
-                .override(imageSize[0], imageSize[1])
+                .override(Images.TWO_X_IMAGE_SIZE[0], Images.TWO_X_IMAGE_SIZE[1])
                 .transition(withCrossFade())
                 .into(imageView);
         imageView.setOnClickListener(shotClick);
@@ -301,22 +297,22 @@ public class DribbbleShot extends Activity {
         if (postponeEnterTransition) postponeEnterTransition();
         imageView.getViewTreeObserver().addOnPreDrawListener(
                 new ViewTreeObserver.OnPreDrawListener() {
-            @Override
-            public boolean onPreDraw() {
-                imageView.getViewTreeObserver().removeOnPreDrawListener(this);
-                calculateFabPosition();
-                if (postponeEnterTransition) startPostponedEnterTransition();
-                return true;
-            }
-        });
+                    @Override
+                    public boolean onPreDraw() {
+                        imageView.getViewTreeObserver().removeOnPreDrawListener(this);
+                        calculateFabPosition();
+                        if (postponeEnterTransition) startPostponedEnterTransition();
+                        return true;
+                    }
+                });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ((FabOverlapTextView) title).setText(shot.title);
+            ((FabOverlapTextView) title).setText(news.title);
         } else {
-            ((TextView) title).setText(shot.title);
+            ((TextView) title).setText(news.title);
         }
-        if (!TextUtils.isEmpty(shot.description)) {
-            final Spanned descText = shot.getParsedDescription(
+        if (!TextUtils.isEmpty(news.excerpt)) {
+            final Spanned descText = news.getParsedDescription(
                     ContextCompat.getColorStateList(this, R.color.dribbble_links),
                     ContextCompat.getColor(this, R.color.dribbble_link_highlight));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -329,55 +325,54 @@ public class DribbbleShot extends Activity {
         }
         NumberFormat nf = NumberFormat.getInstance();
         likeCount.setText(
-                res.getQuantityString(R.plurals.likes,
-                        (int) shot.likes_count,
-                        nf.format(shot.likes_count)));
-        likeCount.setOnClickListener(v -> {
-            ((AnimatedVectorDrawable) likeCount.getCompoundDrawables()[1]).start();
-            if (shot.likes_count > 0) {
-                PlayerSheet.start(DribbbleShot.this, shot);
-            }
-        });
-        if (shot.likes_count == 0) {
-            likeCount.setBackground(null); // clear touch ripple if doesn't do anything
-        }
+                res.getQuantityString(R.plurals.likes,0,
+                        nf.format(0)));
+//        likeCount.setOnClickListener(v -> {
+//            ((AnimatedVectorDrawable) likeCount.getCompoundDrawables()[1]).start();
+//            if (shot.likes_count > 0) {
+//                PlayerSheet.start(OrientNewsActivity.this, shot);
+//            }
+//        });
+//        if (shot.likes_count == 0) {
+//            likeCount.setBackground(null); // clear touch ripple if doesn't do anything
+//        }
+        //todo view count
         viewCount.setText(
-                res.getQuantityString(R.plurals.views,
-                        (int) shot.views_count,
-                        nf.format(shot.views_count)));
-        viewCount.setOnClickListener(v -> ((AnimatedVectorDrawable) viewCount.getCompoundDrawables()[1]).start());
+                res.getQuantityString(R.plurals.views,0,
+                        nf.format(0)));
+//        viewCount.setOnClickListener(v -> ((AnimatedVectorDrawable) viewCount.getCompoundDrawables()[1]).start());
         share.setOnClickListener(v -> {
             ((AnimatedVectorDrawable) share.getCompoundDrawables()[1]).start();
-            new ShareDribbbleImageTask(DribbbleShot.this, shot).execute();
+            new ShareOrientImageTask(OrientNewsActivity.this, news).execute();
         });
-        if (shot.user != null) {
-            playerName.setText(shot.user.name.toLowerCase());
+        if (news.author!= null) {
+            playerName.setText(news.author.fullname().toLowerCase());
             GlideApp.with(this)
-                    .load(shot.user.getHighQualityAvatarUrl())
+                    .load(news.author.url)
                     .circleCrop()
                     .placeholder(R.drawable.avatar_placeholder)
                     .override(largeAvatarSize, largeAvatarSize)
                     .transition(withCrossFade())
                     .into(playerAvatar);
-            View.OnClickListener playerClick = v -> {
-                Intent player = new Intent(DribbbleShot.this, PlayerActivity.class);
-                if (shot.user.shots_count > 0) { // legit user object
-                    player.putExtra(PlayerActivity.EXTRA_PLAYER, shot.user);
-                } else {
-                    // search doesn't fully populate the user object,
-                    // in this case send the ID not the full user
-                    player.putExtra(PlayerActivity.EXTRA_PLAYER_NAME, shot.user.username);
-                    player.putExtra(PlayerActivity.EXTRA_PLAYER_ID, shot.user.id);
-                }
-                ActivityOptions options =
-                        ActivityOptions.makeSceneTransitionAnimation(DribbbleShot.this,
-                                playerAvatar, getString(R.string.transition_player_avatar));
-                startActivity(player, options.toBundle());
-            };
-            playerAvatar.setOnClickListener(playerClick);
-            playerName.setOnClickListener(playerClick);
-            if (shot.created_at != null) {
-                shotTimeAgo.setText(DateUtils.getRelativeTimeSpanString(shot.created_at.getTime(),
+//            View.OnClickListener playerClick = v -> {
+//                Intent player = new Intent(OrientNewsActivity.this, PlayerActivity.class);
+//                if (shot.user.shots_count > 0) { // legit user object
+//                    player.putExtra(PlayerActivity.EXTRA_PLAYER, shot.user);
+//                } else {
+//                    // search doesn't fully populate the user object,
+//                    // in this case send the ID not the full user
+//                    player.putExtra(PlayerActivity.EXTRA_PLAYER_NAME, shot.user.username);
+//                    player.putExtra(PlayerActivity.EXTRA_PLAYER_ID, shot.user.id);
+//                }
+//                ActivityOptions options =
+//                        ActivityOptions.makeSceneTransitionAnimation(OrientNewsActivity.this,
+//                                playerAvatar, getString(R.string.transition_player_avatar));
+//                startActivity(player, options.toBundle());
+//            };
+//            playerAvatar.setOnClickListener(playerClick);
+//            playerName.setOnClickListener(playerClick);
+            if (news.date != null) {
+                shotTimeAgo.setText(DateUtils.getRelativeTimeSpanString(news.date.getTime(),
                         System.currentTimeMillis(),
                         DateUtils.SECOND_IN_MILLIS).toString().toLowerCase());
             }
@@ -387,18 +382,18 @@ public class DribbbleShot extends Activity {
             shotTimeAgo.setVisibility(View.GONE);
         }
 
-        commentAnimator = new CommentAnimator();
+        commentAnimator = new OrientNewsActivity.CommentAnimator();
         commentsList.setItemAnimator(commentAnimator);
-        adapter = new CommentsAdapter(shotDescription, commentFooter, shot.comments_count,
+        adapter = new OrientNewsActivity.CommentsAdapter(shotDescription, commentFooter, 0,
                 getResources().getInteger(R.integer.comment_expand_collapse_duration));
         commentsList.setAdapter(adapter);
         commentsList.addItemDecoration(new InsetDividerDecoration(
                 res.getDimensionPixelSize(R.dimen.divider_height),
                 res.getDimensionPixelSize(R.dimen.keyline_1),
                 ContextCompat.getColor(this, R.color.divider)));
-        if (shot.comments_count != 0) {
-            loadComments();
-        }
+//        if (shot.comments_count != 0) {
+//            loadComments();
+//        }
         checkLiked();
     }
 
@@ -410,7 +405,7 @@ public class DribbbleShot extends Activity {
     private View.OnClickListener shotClick = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            openLink(shot.url);
+            openLink(news.url);
         }
     };
 
@@ -422,11 +417,11 @@ public class DribbbleShot extends Activity {
 
     void openLink(String url) {
         CustomTabActivityHelper.openCustomTab(
-                DribbbleShot.this,
+                OrientNewsActivity.this,
                 new CustomTabsIntent.Builder()
-                    .setToolbarColor(ContextCompat.getColor(DribbbleShot.this, R.color.dribbble))
-                    .addDefaultShareMenuItem()
-                    .build(),
+                        .setToolbarColor(ContextCompat.getColor(OrientNewsActivity.this, R.color.dribbble))
+                        .addDefaultShareMenuItem()
+                        .build(),
                 Uri.parse(url));
     }
 
@@ -437,7 +432,7 @@ public class DribbbleShot extends Activity {
             final Bitmap bitmap = GlideUtils.getBitmap(resource);
             if (bitmap == null) return false;
             final int twentyFourDip = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                    24, DribbbleShot.this.getResources().getDisplayMetrics());
+                    24, OrientNewsActivity.this.getResources().getDisplayMetrics());
             Palette.from(bitmap)
                     .maximumColorCount(3)
                     .clearFilters() /* by default palette ignore certain hues
@@ -455,7 +450,7 @@ public class DribbbleShot extends Activity {
 
                         if (!isDark) { // make back icon dark on light thumbnail_images
                             back.setColorFilter(ContextCompat.getColor(
-                                    DribbbleShot.this, R.color.dark_icon));
+                                    OrientNewsActivity.this, R.color.dark_icon));
                         }
 
                         // color the status bar. Set a complementary dark color on L,
@@ -481,7 +476,7 @@ public class DribbbleShot extends Activity {
                                     (int) animation.getAnimatedValue()));
                             statusBarColorAnim.setDuration(1000L);
                             statusBarColorAnim.setInterpolator(
-                                    getFastOutSlowInInterpolator(DribbbleShot.this));
+                                    getFastOutSlowInInterpolator(OrientNewsActivity.this));
                             statusBarColorAnim.start();
                         }
                     });
@@ -492,14 +487,14 @@ public class DribbbleShot extends Activity {
                         // color the ripple on the image spacer (default is grey)
                         shotSpacer.setBackground(
                                 ViewUtils.createRipple(palette, 0.25f, 0.5f,
-                                ContextCompat.getColor(DribbbleShot.this, R.color.mid_grey),
-                                true));
+                                        ContextCompat.getColor(OrientNewsActivity.this, R.color.mid_grey),
+                                        true));
                         // slightly more opaque ripple on the pinned image to compensate
                         // for the scrim
                         imageView.setForeground(
                                 ViewUtils.createRipple(palette, 0.3f, 0.6f,
-                                ContextCompat.getColor(DribbbleShot.this, R.color.mid_grey),
-                                true));
+                                        ContextCompat.getColor(OrientNewsActivity.this, R.color.mid_grey),
+                                        true));
                     });
 
             // TODO should keep the background if the image contains transparency?!
@@ -559,39 +554,39 @@ public class DribbbleShot extends Activity {
     private View.OnClickListener fabClick = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            if (dribbblePrefs.isLoggedIn()) {
-                fab.toggle();
-                doLike();
-            } else {
-                final Intent login = new Intent(DribbbleShot.this, DribbbleLogin.class);
-                FabTransform.addExtras(login, ContextCompat.getColor(DribbbleShot.this, R
-                        .color.dribbble), R.drawable.ic_heart_empty_56dp);
-                ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation
-                        (DribbbleShot.this, fab, getString(R.string.transition_dribbble_login));
-                startActivityForResult(login, RC_LOGIN_LIKE, options.toBundle());
-            }
+//            if (dribbblePrefs.isLoggedIn()) {
+//                fab.toggle();
+//                doLike();
+//            } else {
+//                final Intent login = new Intent(OrientNewsActivity.this, DribbbleLogin.class);
+//                FabTransform.addExtras(login, ContextCompat.getColor(OrientNewsActivity.this, R
+//                        .color.dribbble), R.drawable.ic_heart_empty_56dp);
+//                ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation
+//                        (OrientNewsActivity.this, fab, getString(R.string.transition_dribbble_login));
+//                startActivityForResult(login, RC_LOGIN_LIKE, options.toBundle());
+//            }
         }
     };
 
     void loadComments() {
-        final Call<List<Comment>> commentsCall =
-                dribbblePrefs.getApi().getComments(shot.id, 0, DribbbleService.PER_PAGE_MAX);
-        commentsCall.enqueue(new Callback<List<Comment>>() {
-            @Override
-            public void onResponse(Call<List<Comment>> call, Response<List<Comment>> response) {
-                final List<Comment> comments = response.body();
-                if (comments != null && !comments.isEmpty()) {
-                    adapter.addComments(comments);
-                }
-            }
-
-            @Override public void onFailure(Call<List<Comment>> call, Throwable t) { }
-        });
+//        final Call<List<Comment>> commentsCall =
+//                dribbblePrefs.getApi().getComments(shot.id, 0, DribbbleService.PER_PAGE_MAX);
+//        commentsCall.enqueue(new Callback<List<Comment>>() {
+//            @Override
+//            public void onResponse(Call<List<Comment>> call, Response<List<Comment>> response) {
+//                final List<Comment> comments = response.body();
+//                if (comments != null && !comments.isEmpty()) {
+//                    adapter.addComments(comments);
+//                }
+//            }
+//
+//            @Override public void onFailure(Call<List<Comment>> call, Throwable t) { }
+//        });
     }
 
     void setResultAndFinish() {
         final Intent resultData = new Intent();
-        resultData.putExtra(RESULT_EXTRA_SHOT_ID, shot.id);
+        resultData.putExtra(RESULT_EXTRA_SHOT_ID, news.id);
         setResult(RESULT_OK, resultData);
         finishAfterTransition();
     }
@@ -606,87 +601,87 @@ public class DribbbleShot extends Activity {
     }
 
     void doLike() {
-        performingLike = true;
-        if (fab.isChecked()) {
-            final Call<Like> likeCall = dribbblePrefs.getApi().like(shot.id);
-            likeCall.enqueue(new Callback<Like>() {
-                @Override
-                public void onResponse(Call<Like> call, Response<Like> response) {
-                    performingLike = false;
-                }
-
-                @Override
-                public void onFailure(Call<Like> call, Throwable t) {
-                    performingLike = false;
-                }
-            });
-        } else {
-            final Call<Void> unlikeCall = dribbblePrefs.getApi().unlike(shot.id);
-            unlikeCall.enqueue(new Callback<Void>() {
-                @Override
-                public void onResponse(Call<Void> call, Response<Void> response) {
-                    performingLike = false;
-                }
-
-                @Override
-                public void onFailure(Call<Void> call, Throwable t) {
-                    performingLike = false;
-                }
-            });
-        }
+//        performingLike = true;
+//        if (fab.isChecked()) {
+//            final Call<Like> likeCall = dribbblePrefs.getApi().like(shot.id);
+//            likeCall.enqueue(new Callback<Like>() {
+//                @Override
+//                public void onResponse(Call<Like> call, Response<Like> response) {
+//                    performingLike = false;
+//                }
+//
+//                @Override
+//                public void onFailure(Call<Like> call, Throwable t) {
+//                    performingLike = false;
+//                }
+//            });
+//        } else {
+//            final Call<Void> unlikeCall = dribbblePrefs.getApi().unlike(shot.id);
+//            unlikeCall.enqueue(new Callback<Void>() {
+//                @Override
+//                public void onResponse(Call<Void> call, Response<Void> response) {
+//                    performingLike = false;
+//                }
+//
+//                @Override
+//                public void onFailure(Call<Void> call, Throwable t) {
+//                    performingLike = false;
+//                }
+//            });
+//        }
     }
 
     boolean isOP(long playerId) {
-        return shot.user != null && shot.user.id == playerId;
+        return news.author != null && news.author.id == playerId;
     }
 
     private void checkLiked() {
-        if (shot != null && dribbblePrefs.isLoggedIn()) {
-            final Call<Like> likedCall = dribbblePrefs.getApi().liked(shot.id);
-            likedCall.enqueue(new Callback<Like>() {
-                @Override
-                public void onResponse(Call<Like> call, Response<Like> response) {
-                    // note that like.user will be null here
-                    fab.setChecked(response.body() != null);
-                }
-
-                @Override
-                public void onFailure(Call<Like> call, Throwable t) {
-                    // 404 is expected if shot is not liked
-                    fab.setChecked(false);
-                    fab.jumpDrawablesToCurrentState();
-                }
-            });
-        }
+//        if (shot != null && dribbblePrefs.isLoggedIn()) {
+//            final Call<Like> likedCall = dribbblePrefs.getApi().liked(shot.id);
+//            likedCall.enqueue(new Callback<Like>() {
+//                @Override
+//                public void onResponse(Call<Like> call, Response<Like> response) {
+//                    // note that like.user will be null here
+//                    fab.setChecked(response.body() != null);
+//                }
+//
+//                @Override
+//                public void onFailure(Call<Like> call, Throwable t) {
+//                    // 404 is expected if shot is not liked
+//                    fab.setChecked(false);
+//                    fab.jumpDrawablesToCurrentState();
+//                }
+//            });
+//        }
     }
 
     private void setupCommenting() {
-        allowComment = !dribbblePrefs.isLoggedIn()
-                || (dribbblePrefs.isLoggedIn() && dribbblePrefs.userCanPost());
-        if (allowComment && commentFooter == null) {
-            commentFooter = getLayoutInflater().inflate(R.layout.dribbble_enter_comment,
-                    commentsList, false);
-            userAvatar = (ForegroundImageView) commentFooter.findViewById(R.id.avatar);
-            enterComment = commentFooter.findViewById(R.id.comment);
-            postComment = commentFooter.findViewById(R.id.post_comment);
-            enterComment.setOnFocusChangeListener(enterCommentFocus);
-        } else if (!allowComment && commentFooter != null) {
-            adapter.removeCommentingFooter();
-            commentFooter = null;
-            Toast.makeText(getApplicationContext(),
-                    R.string.prospects_cant_post, Toast.LENGTH_SHORT).show();
-        }
-
-        if (allowComment
-                && dribbblePrefs.isLoggedIn()
-                && !TextUtils.isEmpty(dribbblePrefs.getUserAvatar())) {
-            GlideApp.with(this)
-                    .load(dribbblePrefs.getUserAvatar())
-                    .circleCrop()
-                    .placeholder(R.drawable.ic_player)
-                    .transition(withCrossFade())
-                    .into(userAvatar);
-        }
+//        allowComment = !dribbblePrefs.isLoggedIn()
+//                || (dribbblePrefs.isLoggedIn() && dribbblePrefs.userCanPost());
+//        if (allowComment && commentFooter == null) {
+//            commentFooter = getLayoutInflater().inflate(R.layout.dribbble_enter_comment,
+//                    commentsList, false);
+//            userAvatar = (ForegroundImageView) commentFooter.findViewById(R.id.avatar);
+//            enterComment = commentFooter.findViewById(R.id.comment);
+//            postComment = commentFooter.findViewById(R.id.post_comment);
+//            enterComment.setOnFocusChangeListener(enterCommentFocus);
+//        } else if (!allowComment && commentFooter != null) {
+//            adapter.removeCommentingFooter();
+//            commentFooter = null;
+//            Toast.makeText(getApplicationContext(),
+//                    R.string.prospects_cant_post, Toast.LENGTH_SHORT).show();
+//        }
+//
+//        if (allowComment
+//                && dribbblePrefs.isLoggedIn()
+//                && !TextUtils.isEmpty(dribbblePrefs.getUserAvatar())) {
+//            GlideApp.with(this)
+//                    .load(dribbblePrefs.getUserAvatar())
+//                    .circleCrop()
+//                    .placeholder(R.drawable.ic_player)
+//                    .transition(withCrossFade())
+//                    .into(userAvatar);
+//        }
     }
 
     class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -716,7 +711,7 @@ public class DribbbleShot extends Activity {
             loading = !noComments;
             expandCollapse = new AutoTransition();
             expandCollapse.setDuration(expandDuration);
-            expandCollapse.setInterpolator(getFastOutSlowInInterpolator(DribbbleShot.this));
+            expandCollapse.setInterpolator(getFastOutSlowInInterpolator(OrientNewsActivity.this));
             expandCollapse.addListener(new TransitionUtils.TransitionListenerAdapter() {
                 @Override
                 public void onTransitionStart(Transition transition) {
@@ -761,15 +756,15 @@ public class DribbbleShot extends Activity {
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             switch (viewType) {
                 case R.layout.dribbble_shot_description:
-                    return new SimpleViewHolder(description);
+                    return new DribbbleShot.SimpleViewHolder(description);
                 case R.layout.dribbble_comment:
                     return createCommentHolder(parent, viewType);
                 case R.layout.loading:
                 case R.layout.dribbble_no_comments:
-                    return new SimpleViewHolder(
+                    return new DribbbleShot.SimpleViewHolder(
                             getLayoutInflater().inflate(viewType, parent, false));
                 case R.layout.dribbble_enter_comment:
-                    return new SimpleViewHolder(footer);
+                    return new OrientNewsActivity.SimpleViewHolder(footer);
             }
             throw new IllegalArgumentException();
         }
@@ -778,7 +773,7 @@ public class DribbbleShot extends Activity {
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (getItemViewType(position)) {
                 case R.layout.dribbble_comment:
-                    bindComment((CommentViewHolder) holder, getComment(position));
+                    bindComment((OrientNewsActivity.CommentViewHolder) holder, getComment(position));
                     break;
             }
         }
@@ -833,20 +828,20 @@ public class DribbbleShot extends Activity {
                 if (expandedCommentPosition != position) {
                     expandedCommentPosition = position;
                     notifyItemChanged(position, EXPAND);
-                    if (comment.liked == null) {
-                        final Call<Like> liked = dribbblePrefs.getApi()
-                                .likedComment(shot.id, comment.id);
-                        liked.enqueue(new Callback<Like>() {
-                            @Override
-                            public void onResponse(Call<Like> call, Response<Like> response) {
-                                comment.liked = response.isSuccessful();
-                                holder.likeHeart.setChecked(comment.liked);
-                                holder.likeHeart.jumpDrawablesToCurrentState();
-                            }
-
-                            @Override public void onFailure(Call<Like> call, Throwable t) { }
-                        });
-                    }
+//                    if (comment.liked == null) {
+//                        final Call<Like> liked = dribbblePrefs.getApi()
+//                                .likedComment(shot.id, comment.id);
+//                        liked.enqueue(new Callback<Like>() {
+//                            @Override
+//                            public void onResponse(Call<Like> call, Response<Like> response) {
+//                                comment.liked = response.isSuccessful();
+//                                holder.likeHeart.setChecked(comment.liked);
+//                                holder.likeHeart.jumpDrawablesToCurrentState();
+//                            }
+//
+//                            @Override public void onFailure(Call<Like> call, Throwable t) { }
+//                        });
+//                    }
                     if (enterComment != null && enterComment.hasFocus()) {
                         enterComment.clearFocus();
                         ImeUtils.hideIme(enterComment);
@@ -862,10 +857,10 @@ public class DribbbleShot extends Activity {
                 if (position == RecyclerView.NO_POSITION) return;
 
                 final Comment comment = getComment(position);
-                final Intent player = new Intent(DribbbleShot.this, PlayerActivity.class);
+                final Intent player = new Intent(OrientNewsActivity.this, PlayerActivity.class);
                 player.putExtra(PlayerActivity.EXTRA_PLAYER, comment.user);
                 ActivityOptions options =
-                        ActivityOptions.makeSceneTransitionAnimation(DribbbleShot.this,
+                        ActivityOptions.makeSceneTransitionAnimation(OrientNewsActivity.this,
                                 Pair.create(holder.itemView,
                                         getString(R.string.transition_player_background)),
                                 Pair.create((View) holder.avatar,
@@ -890,74 +885,74 @@ public class DribbbleShot extends Activity {
             });
 
             holder.likeHeart.setOnClickListener(v -> {
-                if (dribbblePrefs.isLoggedIn()) {
-                    final int position = holder.getAdapterPosition();
-                    if (position == RecyclerView.NO_POSITION) return;
-
-                    final Comment comment = getComment(position);
-                    if (comment.liked == null || !comment.liked) {
-                        comment.liked = true;
-                        comment.likes_count++;
-                        holder.likesCount.setText(String.valueOf(comment.likes_count));
-                        notifyItemChanged(position, COMMENT_LIKE);
-                        final Call<Like> likeCommentCall =
-                                dribbblePrefs.getApi().likeComment(shot.id, comment.id);
-                        likeCommentCall.enqueue(new Callback<Like>() {
-                            @Override
-                            public void onResponse(Call<Like> call, Response<Like> response) { }
-
-                            @Override
-                            public void onFailure(Call<Like> call, Throwable t) { }
-                        });
-                    } else {
-                        comment.liked = false;
-                        comment.likes_count--;
-                        holder.likesCount.setText(String.valueOf(comment.likes_count));
-                        notifyItemChanged(position, COMMENT_LIKE);
-                        final Call<Void> unlikeCommentCall =
-                                dribbblePrefs.getApi().unlikeComment(shot.id, comment.id);
-                        unlikeCommentCall.enqueue(new Callback<Void>() {
-                            @Override
-                            public void onResponse(Call<Void> call, Response<Void> response) { }
-
-                            @Override
-                            public void onFailure(Call<Void> call, Throwable t) { }
-                        });
-                    }
-                } else {
-                    holder.likeHeart.setChecked(false);
-                    startActivityForResult(new Intent(DribbbleShot.this,
-                            DribbbleLogin.class), RC_LOGIN_LIKE);
-                }
+//                if (dribbblePrefs.isLoggedIn()) {
+//                    final int position = holder.getAdapterPosition();
+//                    if (position == RecyclerView.NO_POSITION) return;
+//
+//                    final Comment comment = getComment(position);
+//                    if (comment.liked == null || !comment.liked) {
+//                        comment.liked = true;
+//                        comment.likes_count++;
+//                        holder.likesCount.setText(String.valueOf(comment.likes_count));
+//                        notifyItemChanged(position, COMMENT_LIKE);
+//                        final Call<Like> likeCommentCall =
+//                                dribbblePrefs.getApi().likeComment(shot.id, comment.id);
+//                        likeCommentCall.enqueue(new Callback<Like>() {
+//                            @Override
+//                            public void onResponse(Call<Like> call, Response<Like> response) { }
+//
+//                            @Override
+//                            public void onFailure(Call<Like> call, Throwable t) { }
+//                        });
+//                    } else {
+//                        comment.liked = false;
+//                        comment.likes_count--;
+//                        holder.likesCount.setText(String.valueOf(comment.likes_count));
+//                        notifyItemChanged(position, COMMENT_LIKE);
+//                        final Call<Void> unlikeCommentCall =
+//                                dribbblePrefs.getApi().unlikeComment(shot.id, comment.id);
+//                        unlikeCommentCall.enqueue(new Callback<Void>() {
+//                            @Override
+//                            public void onResponse(Call<Void> call, Response<Void> response) { }
+//
+//                            @Override
+//                            public void onFailure(Call<Void> call, Throwable t) { }
+//                        });
+//                    }
+//                } else {
+//                    holder.likeHeart.setChecked(false);
+//                    startActivityForResult(new Intent(OrientNewsActivity.this,
+//                            DribbbleLogin.class), RC_LOGIN_LIKE);
+//                }
             });
 
             holder.likesCount.setOnClickListener(v -> {
-                final int position = holder.getAdapterPosition();
-                if (position == RecyclerView.NO_POSITION) return;
-
-                final Comment comment = getComment(position);
-                final Call<List<Like>> commentLikesCall =
-                        dribbblePrefs.getApi().getCommentLikes(shot.id, comment.id);
-                commentLikesCall.enqueue(new Callback<List<Like>>() {
-                    @Override
-                    public void onResponse(Call<List<Like>> call,
-                                           Response<List<Like>> response) {
-                        // TODO something better than this.
-                        StringBuilder sb = new StringBuilder("Liked by:\n\n");
-                        for (Like like : response.body()) {
-                            if (like.user != null) {
-                                sb.append("@");
-                                sb.append(like.user.username);
-                                sb.append("\n");
-                            }
-                        }
-                        Toast.makeText(getApplicationContext(), sb.toString(), Toast
-                                .LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<Like>> call, Throwable t) { }
-                });
+//                final int position = holder.getAdapterPosition();
+//                if (position == RecyclerView.NO_POSITION) return;
+//
+//                final Comment comment = getComment(position);
+//                final Call<List<Like>> commentLikesCall =
+//                        dribbblePrefs.getApi().getCommentLikes(shot.id, comment.id);
+//                commentLikesCall.enqueue(new Callback<List<Like>>() {
+//                    @Override
+//                    public void onResponse(Call<List<Like>> call,
+//                                           Response<List<Like>> response) {
+//                        // TODO something better than this.
+//                        StringBuilder sb = new StringBuilder("Liked by:\n\n");
+//                        for (Like like : response.body()) {
+//                            if (like.user != null) {
+//                                sb.append("@");
+//                                sb.append(like.user.username);
+//                                sb.append("\n");
+//                            }
+//                        }
+//                        Toast.makeText(getApplicationContext(), sb.toString(), Toast
+//                                .LENGTH_SHORT).show();
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<List<Like>> call, Throwable t) { }
+//                });
             });
 
             return holder;
@@ -966,7 +961,7 @@ public class DribbbleShot extends Activity {
         private void bindComment(CommentViewHolder holder, Comment comment) {
             final int position = holder.getAdapterPosition();
             final boolean isExpanded = position == expandedCommentPosition;
-            GlideApp.with(DribbbleShot.this)
+            GlideApp.with(OrientNewsActivity.this)
                     .load(comment.user.getHighQualityAvatarUrl())
                     .circleCrop()
                     .placeholder(R.drawable.avatar_placeholder)
@@ -983,12 +978,12 @@ public class DribbbleShot extends Activity {
             HtmlUtils.setTextWithNiceLinks(holder.commentBody,
                     comment.getParsedBody(holder.commentBody));
             holder.likeHeart.setChecked(comment.liked != null && comment.liked);
-            holder.likeHeart.setEnabled(comment.user.id != dribbblePrefs.getUserId());
+            holder.likeHeart.setEnabled(comment.user.id != orientPrefs.getUserId());
             holder.likesCount.setText(String.valueOf(comment.likes_count));
             setExpanded(holder, isExpanded);
         }
 
-        private void setExpanded(CommentViewHolder holder, boolean isExpanded) {
+        private void setExpanded(OrientNewsActivity.CommentViewHolder holder, boolean isExpanded) {
             holder.itemView.setActivated(isExpanded);
             holder.reply.setVisibility((isExpanded && allowComment) ? View.VISIBLE : View.GONE);
             holder.likeHeart.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
@@ -996,7 +991,7 @@ public class DribbbleShot extends Activity {
         }
 
         private void bindPartialCommentChange(
-                CommentViewHolder holder, int position, List<Object> partialChangePayloads) {
+                OrientNewsActivity.CommentViewHolder holder, int position, List<Object> partialChangePayloads) {
             // for certain changes we don't need to rebind data, just update some view state
             if ((partialChangePayloads.contains(EXPAND)
                     || partialChangePayloads.contains(COLLAPSE))
@@ -1026,11 +1021,13 @@ public class DribbbleShot extends Activity {
     static class CommentViewHolder extends RecyclerView.ViewHolder implements Divided {
 
         @BindView(R.id.player_avatar) ImageView avatar;
-        @BindView(R.id.comment_author) AuthorTextView author;
+        @BindView(R.id.comment_author)
+        AuthorTextView author;
         @BindView(R.id.comment_time_ago) TextView timeAgo;
         @BindView(R.id.comment_text) TextView commentBody;
         @BindView(R.id.comment_reply) ImageButton reply;
-        @BindView(R.id.comment_like) CheckableImageButton likeHeart;
+        @BindView(R.id.comment_like)
+        CheckableImageButton likeHeart;
         @BindView(R.id.comment_likes_count) TextView likesCount;
 
         CommentViewHolder(View itemView) {
@@ -1069,5 +1066,4 @@ public class DribbbleShot extends Activity {
             return super.animateMove(holder, fromX, fromY, toX, toY);
         }
     }
-
 }

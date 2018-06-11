@@ -36,7 +36,7 @@ public class Post extends PlaidItem implements Parcelable {
     public final String tagline;
     public final String discussion_url;
     public final String redirect_url;
-    //public final Date created_at;
+    //public final Date date;
     public final int comments_count;
     public final int votes_count;
     public final User user;
@@ -50,7 +50,7 @@ public class Post extends PlaidItem implements Parcelable {
                 String tagline,
                 String discussion_url,
                 String redirect_url,
-                //Date created_at,
+                //Date date,
                 int comments_count,
                 int votes_count,
                 User user,
@@ -64,7 +64,7 @@ public class Post extends PlaidItem implements Parcelable {
         this.tagline = tagline;
         this.discussion_url = discussion_url;
         this.redirect_url = redirect_url;
-        //this.created_at = created_at;
+        //this.date = date;
         this.comments_count = comments_count;
         this.votes_count = votes_count;
         this.user = user;
@@ -81,7 +81,7 @@ public class Post extends PlaidItem implements Parcelable {
         discussion_url = in.readString();
         redirect_url = in.readString();
         long tmpCreated_at = in.readLong();
-        //created_at = tmpCreated_at != -1 ? new Date(tmpCreated_at) : null;
+        //date = tmpCreated_at != -1 ? new Date(tmpCreated_at) : null;
         comments_count = in.readInt();
         votes_count = in.readInt();
         user = (User) in.readValue(User.class.getClassLoader());
@@ -142,7 +142,7 @@ public class Post extends PlaidItem implements Parcelable {
         dest.writeString(tagline);
         dest.writeString(discussion_url);
         dest.writeString(redirect_url);
-        //dest.writeLong(created_at != null ? created_at.getTime() : -1L);
+        //dest.writeLong(date != null ? date.getTime() : -1L);
         dest.writeInt(comments_count);
         dest.writeInt(votes_count);
         dest.writeValue(user);

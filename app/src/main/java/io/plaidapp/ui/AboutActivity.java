@@ -197,7 +197,7 @@ public class AboutActivity extends Activity {
                 new Library("Android support libraries",
                         "The Android support libraries offer a number of features that are not built into the framework.",
                         "https://developer.android.com/topic/libraries/support-library",
-                        "https://developer.android.com/images/android_icon_125.png",
+                        "https://developer.android.com/thumbnail_images/android_icon_125.png",
                         false),
                 new Library("ButterKnife",
                         "Bind Android views and callbacks to fields and methods.",

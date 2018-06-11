@@ -32,9 +32,11 @@ import io.plaidapp.data.api.designernews.DesignerNewsService;
 import io.plaidapp.data.api.dribbble.DribbbleSearchConverter;
 import io.plaidapp.data.api.dribbble.DribbbleSearchService;
 import io.plaidapp.data.api.dribbble.DribbbleService;
+import io.plaidapp.data.api.orientnews.OrientNewsService;
 import io.plaidapp.data.api.producthunt.ProductHuntService;
 import io.plaidapp.data.prefs.DesignerNewsPrefs;
 import io.plaidapp.data.prefs.DribbblePrefs;
+import io.plaidapp.data.prefs.OrientPrefs;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -49,6 +51,7 @@ public abstract class BaseDataManager<T> implements DataLoadingSubject {
     private final AtomicInteger loadingCount;
     private final DesignerNewsPrefs designerNewsPrefs;
     private final DribbblePrefs dribbblePrefs;
+    private final OrientPrefs orientPrefs;
     private DribbbleSearchService dribbbleSearchApi;
     private ProductHuntService productHuntApi;
     private List<DataLoadingSubject.DataLoadingCallbacks> loadingCallbacks;
@@ -57,6 +60,7 @@ public abstract class BaseDataManager<T> implements DataLoadingSubject {
         loadingCount = new AtomicInteger(0);
         designerNewsPrefs = DesignerNewsPrefs.get(context);
         dribbblePrefs = DribbblePrefs.get(context);
+        orientPrefs = OrientPrefs.get(context);
     }
 
     public abstract void onDataLoaded(T data);
@@ -75,6 +79,10 @@ public abstract class BaseDataManager<T> implements DataLoadingSubject {
     public DesignerNewsService getDesignerNewsApi() {
         return designerNewsPrefs.getApi();
     }
+
+    public OrientPrefs getOrientPrefs(){ return orientPrefs; }
+
+    public OrientNewsService getOrientNewsApi(){ return orientPrefs.getApi();}
 
     public DribbblePrefs getDribbblePrefs() {
         return dribbblePrefs;

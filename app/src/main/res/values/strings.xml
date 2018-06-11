@@ -18,7 +18,7 @@
 <resources>
 
     <!-- global -->
-    <string name="app_name">Plaid</string>
+    <string name="app_name">Orient</string>
     <string name="no_comments">No comments</string>
     <string name="login_to">Log in to</string>
     <string name="need_login">Woah there chief. First you\'ll need&#160;to</string> <!-- &#160; == nbsp -->
@@ -160,4 +160,5 @@
     <string name="transition_search_back" translatable="false">transition_search_back</string>
 
     <string name="comment_likes_count">0</string>
+    <string name="source_orient_news_popular">Recent Orient News</string>
 </resources>

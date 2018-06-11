@@ -30,7 +30,7 @@ import io.plaidapp.util.measured
 
 /**
  * A Glide [com.bumptech.glide.request.target.ViewTarget] for [BadgedFourThreeImageView]s.
- * It applies a badge for animated images, can prevent GIFs from auto-playing & applies a palette
+ * It applies a badge for animated thumbnail_images, can prevent GIFs from auto-playing & applies a palette
  * generated ripple.
  */
 class DribbbleTarget(

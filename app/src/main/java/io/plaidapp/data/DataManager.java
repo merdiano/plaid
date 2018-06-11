@@ -29,6 +29,8 @@ import io.plaidapp.data.api.dribbble.DribbbleService;
 import io.plaidapp.data.api.dribbble.model.Like;
 import io.plaidapp.data.api.dribbble.model.Shot;
 import io.plaidapp.data.api.dribbble.model.User;
+import io.plaidapp.data.api.orientnews.NewsWrapper;
+import io.plaidapp.data.api.orientnews.model.News;
 import io.plaidapp.data.api.producthunt.model.Post;
 import io.plaidapp.data.prefs.SourceManager;
 import io.plaidapp.ui.FilterAdapter;
@@ -95,6 +97,8 @@ public abstract class DataManager extends BaseDataManager<List<? extends PlaidIt
             loadStarted();
             final int page = getNextPageIndex(source.key);
             switch (source.key) {
+                case SourceManager.SOURCE_ORIENT_RECENT:
+                    loadOrientRecent(page);
                 case SourceManager.SOURCE_DESIGNER_NEWS_POPULAR:
                     loadDesignerNewsTopStories(page);
                     break;
@@ -125,16 +129,21 @@ public abstract class DataManager extends BaseDataManager<List<? extends PlaidIt
                 case SourceManager.SOURCE_PRODUCT_HUNT:
                     loadProductHunt(page);
                     break;
+
                 default:
                     if (source instanceof Source.DribbbleSearchSource) {
                         loadDribbbleSearch((Source.DribbbleSearchSource) source, page);
                     } else if (source instanceof Source.DesignerNewsSearchSource) {
                         loadDesignerNewsSearch((Source.DesignerNewsSearchSource) source, page);
+                    }else if (source instanceof Source.OrientSearchSource) {
+                        loadOrientSearch((Source.OrientSearchSource) source, page);
                     }
                     break;
             }
         }
     }
+
+
 
     private void setupPageIndexes() {
         final List<Source> dateSources = filterAdapter.getFilters();
@@ -170,6 +179,26 @@ public abstract class DataManager extends BaseDataManager<List<? extends PlaidIt
     private void loadFailed(String key) {
         loadFinished();
         inflight.remove(key);
+    }
+
+    private void loadOrientRecent(final int page){
+        final Call<NewsWrapper> recentNews = getOrientNewsApi().getRecentPosts(page);
+        recentNews.enqueue(new Callback<NewsWrapper>() {
+            @Override
+            public void onResponse(Call<NewsWrapper> call, Response<NewsWrapper> response) {
+                if(response.isSuccessful()){
+                    sourceLoaded(response.body().posts, page, SourceManager.SOURCE_ORIENT_RECENT);
+                }
+                else {
+                    loadFailed(SourceManager.SOURCE_ORIENT_RECENT);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<NewsWrapper> call, Throwable t) {
+                loadFailed(SourceManager.SOURCE_ORIENT_RECENT);
+            }
+        });
     }
 
     private void loadDesignerNewsTopStories(final int page) {
@@ -233,6 +262,27 @@ public abstract class DataManager extends BaseDataManager<List<? extends PlaidIt
         inflight.put(source.key, searchCall);
     }
 
+    private void loadOrientSearch(final  Source.OrientSearchSource source,
+                                  final int page){
+        final Call<List<Story>> searchCall = getOrientNewsApi().search(source.query, page);
+        searchCall.enqueue(new Callback<List<Story>>() {
+            @Override
+            public void onResponse(Call<List<Story>> call, Response<List<Story>> response) {
+                if (response.isSuccessful()) {
+                    sourceLoaded(response.body(), page, source.key);
+                } else {
+                    loadFailed(source.key);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Story>> call, Throwable t) {
+                loadFailed(source.key);
+            }
+        });
+        inflight.put(source.key, searchCall);
+
+    }
     private void loadDribbblePopular(final int page) {
         final Call<List<Shot>> popularCall = getDribbbleApi()
                 .getPopular(page, DribbbleService.PER_PAGE_DEFAULT);

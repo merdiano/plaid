@@ -44,6 +44,9 @@ public class SourceManager {
     public static final String SOURCE_DRIBBBLE_DEBUTS = "SOURCE_DRIBBBLE_DEBUTS";
     public static final String SOURCE_DRIBBBLE_ANIMATED = "SOURCE_DRIBBBLE_ANIMATED";
     public static final String SOURCE_PRODUCT_HUNT = "SOURCE_PRODUCT_HUNT";
+    //orient posts
+    public static final String SOURCE_ORIENT_RECENT = "SOURCE_ORIENT_RECENT";
+
     private static final String SOURCES_PREF = "SOURCES_PREF";
     private static final String KEY_SOURCES = "KEY_SOURCES";
 
@@ -66,6 +69,12 @@ public class SourceManager {
                 sources.add(new Source.DesignerNewsSearchSource(
                         sourceKey.replace(Source.DesignerNewsSearchSource
                                 .DESIGNER_NEWS_QUERY_PREFIX, ""),
+                        prefs.getBoolean(sourceKey, false)));
+            } else if (sourceKey.startsWith(Source.OrientSearchSource
+                    .ORIENT_QUERY_PREFIX)) {
+                sources.add(new Source.OrientSearchSource(
+                        sourceKey.replace(Source.OrientSearchSource
+                                .ORIENT_QUERY_PREFIX, ""),
                         prefs.getBoolean(sourceKey, false)));
             } else {
                 // TODO improve this O(n2) search
@@ -126,13 +135,16 @@ public class SourceManager {
 
     private static ArrayList<Source> getDefaultSources(Context context) {
         ArrayList<Source> defaultSources = new ArrayList<>(11);
+        //todo add orient default Sorces
+        defaultSources.add(new Source.OrientSource(SOURCE_ORIENT_RECENT,10,
+                context.getString(R.string.source_orient_news_popular), true));
         defaultSources.add(new Source.DesignerNewsSource(SOURCE_DESIGNER_NEWS_POPULAR, 100,
-                context.getString(R.string.source_designer_news_popular), true));
+                context.getString(R.string.source_designer_news_popular), false));
         defaultSources.add(new Source.DesignerNewsSource(SOURCE_DESIGNER_NEWS_RECENT, 101,
                 context.getString(R.string.source_designer_news_recent), false));
         // 200 sort order range left for DN searches
         defaultSources.add(new Source.DribbbleSource(SOURCE_DRIBBBLE_POPULAR, 300,
-                context.getString(R.string.source_dribbble_popular), true));
+                context.getString(R.string.source_dribbble_popular), false));
         defaultSources.add(new Source.DribbbleSource(SOURCE_DRIBBBLE_FOLLOWING, 301,
                 context.getString(R.string.source_dribbble_following), false));
         defaultSources.add(new Source.DribbbleSource(SOURCE_DRIBBBLE_USER_SHOTS, 302,

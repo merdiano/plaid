@@ -614,8 +614,8 @@ public class ReflowText extends Transition {
      * a progress property passes a threshold.
      * <p>
      * This is helpful when animating text size change as small text scaled up is blurry but larger
-     * text scaled down has different kerning. Instead we use images of both states and switch
-     * during the transition. We use images as animating text size thrashes the font cache.
+     * text scaled down has different kerning. Instead we use thumbnail_images of both states and switch
+     * during the transition. We use thumbnail_images as animating text size thrashes the font cache.
      */
     private static class SwitchDrawable extends Drawable {
 

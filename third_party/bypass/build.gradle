@@ -19,8 +19,13 @@ android {
 }
 
 repositories {
-    google()
-    jcenter()
+    jcenter{
+        url "http://jcenter.bintray.com"
+    }
+    mavenCentral()
+    maven {
+        url 'https://maven.google.com'
+    }
 }
 
 dependencies {

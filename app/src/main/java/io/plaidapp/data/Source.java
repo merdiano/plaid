@@ -78,6 +78,29 @@ public class Source {
         }
     }
 
+    public static class OrientSource extends Source{
+        public OrientSource(String key,
+                            int sortOrder,
+                            String name,
+                            boolean active) {
+            super(key, sortOrder, name, R.drawable.ic_designer_news, active);//todo orientsorce icon
+        }
+    }
+    public static class OrientSearchSource extends OrientSource{
+        public static final String ORIENT_QUERY_PREFIX = "ORIENT_QUERY_";
+        private static final int SEARCH_SORT_ORDER = 400;
+        public final String query;
+
+        public OrientSearchSource(String query,
+                                        boolean active) {
+            super(ORIENT_QUERY_PREFIX + query, SEARCH_SORT_ORDER, "“" + query + "”", active);
+            this.query = query;
+        }
+        @Override
+        public boolean isSwipeDismissable() {
+            return true;
+        }
+    }
     public static class DesignerNewsSource extends Source {
 
         public DesignerNewsSource(String key,

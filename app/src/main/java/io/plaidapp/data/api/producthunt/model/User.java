@@ -43,7 +43,7 @@ public class User implements Parcelable {
     public final long id;
     public final String name;
     public final String headline;
-    //public final Date created_at;
+    //public final Date date;
     public final String username;
     public final String website_url;
     public final String profile_url;
@@ -52,7 +52,7 @@ public class User implements Parcelable {
     public User(long id,
                 String name,
                 String headline,
-                //Date created_at,
+                //Date date,
                 String username,
                 String website_url,
                 String profile_url,
@@ -60,7 +60,7 @@ public class User implements Parcelable {
         this.id = id;
         this.name = name;
         this.headline = headline;
-        //this.created_at = created_at;
+        //this.date = date;
         this.username = username;
         this.website_url = website_url;
         this.profile_url = profile_url;
@@ -72,7 +72,7 @@ public class User implements Parcelable {
         name = in.readString();
         headline = in.readString();
         long tmpCreated_at = in.readLong();
-        //created_at = tmpCreated_at != -1 ? new Date(tmpCreated_at) : null;
+        //date = tmpCreated_at != -1 ? new Date(tmpCreated_at) : null;
         username = in.readString();
         website_url = in.readString();
         profile_url = in.readString();
@@ -89,7 +89,7 @@ public class User implements Parcelable {
         dest.writeLong(id);
         dest.writeString(name);
         dest.writeString(headline);
-        //dest.writeLong(created_at != null ? created_at.getTime() : -1L);
+        //dest.writeLong(date != null ? date.getTime() : -1L);
         dest.writeString(username);
         dest.writeString(website_url);
         dest.writeString(profile_url);

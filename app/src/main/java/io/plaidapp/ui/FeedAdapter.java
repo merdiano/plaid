@@ -74,6 +74,7 @@ import io.plaidapp.data.api.designernews.model.Story;
 import io.plaidapp.data.api.dribbble.PlayerShotsDataManager;
 import io.plaidapp.data.api.dribbble.ShotWeigher;
 import io.plaidapp.data.api.dribbble.model.Shot;
+import io.plaidapp.data.api.orientnews.model.News;
 import io.plaidapp.data.api.producthunt.PostWeigher;
 import io.plaidapp.data.api.producthunt.model.Post;
 import io.plaidapp.data.pocket.PocketUtils;
@@ -104,6 +105,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private static final int TYPE_DESIGNER_NEWS_STORY = 0;
     private static final int TYPE_DRIBBBLE_SHOT = 1;
     private static final int TYPE_PRODUCT_HUNT_POST = 2;
+    private static final int TYPE_ORIENT_NEWS_POST = 3;
     private static final int TYPE_LOADING_MORE = -1;
 
     // we need to hold on to an activity ref for the shared element transitions :/
@@ -170,12 +172,16 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 return createDribbbleShotHolder(parent);
             case TYPE_PRODUCT_HUNT_POST:
                 return createProductHuntStoryHolder(parent);
+            case TYPE_ORIENT_NEWS_POST:
+                return createOrientNewsHolder(parent);
             case TYPE_LOADING_MORE:
                 return new LoadingMoreHolder(
                         layoutInflater.inflate(R.layout.infinite_loading, parent, false));
         }
         return null;
     }
+
+
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
@@ -189,6 +195,9 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 break;
             case TYPE_PRODUCT_HUNT_POST:
                 bindProductHuntPostView((Post) getItem(position), (ProductHuntStoryHolder) holder);
+                break;
+            case TYPE_ORIENT_NEWS_POST:
+                bindOrientNews((News)getItem(position),(OrientNewsHolder)holder,position);
                 break;
             case TYPE_LOADING_MORE:
                 bindLoadingViewHolder((LoadingMoreHolder) holder, position);
@@ -270,6 +279,119 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     @NonNull
+    private OrientNewsHolder createOrientNewsHolder(ViewGroup parent) {
+        final OrientNewsHolder holder = new OrientNewsHolder(
+                layoutInflater.inflate(R.layout.dribbble_shot_item, parent, false));
+        holder.image.setBadgeColor(initialGifBadgeColor);
+        holder.image.setOnClickListener(view -> {
+            Intent intent = new Intent();
+            intent.setClass(host, OrientNewsActivity.class);//todo orient
+            intent.putExtra(DribbbleShot.EXTRA_SHOT,
+                    (News) getItem(holder.getAdapterPosition()));
+            setGridItemContentTransitions(holder.image);
+            ActivityOptions options =
+                    ActivityOptions.makeSceneTransitionAnimation(host,
+                            Pair.create(view, host.getString(R.string.transition_shot)),
+                            Pair.create(view, host.getString(R.string
+                                    .transition_shot_background)));
+            host.startActivityForResult(intent, REQUEST_CODE_VIEW_SHOT, options.toBundle());
+        });
+        holder.image.setOnTouchListener((v, event) -> {
+            // check if it's an event we care about, else bail fast
+            final int action = event.getAction();
+            if (!(action == MotionEvent.ACTION_DOWN
+                    || action == MotionEvent.ACTION_UP
+                    || action == MotionEvent.ACTION_CANCEL)) return false;
+
+            // get the image and check if it's an animated GIF
+            final Drawable drawable = holder.image.getDrawable();
+            if (drawable == null) return false;
+            GifDrawable gif = null;
+            if (drawable instanceof GifDrawable) {
+                gif = (GifDrawable) drawable;
+            } else if (drawable instanceof TransitionDrawable) {
+                // we fade in thumbnail_images on load which uses a TransitionDrawable; check its layers
+                TransitionDrawable fadingIn = (TransitionDrawable) drawable;
+                for (int i = 0; i < fadingIn.getNumberOfLayers(); i++) {
+                    if (fadingIn.getDrawable(i) instanceof GifDrawable) {
+                        gif = (GifDrawable) fadingIn.getDrawable(i);
+                        break;
+                    }
+                }
+            }
+            if (gif == null) return false;
+            // GIF found, start/stop it on press/lift
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    gif.start();
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    gif.stop();
+                    break;
+            }
+            return false;
+        });
+        return holder;
+    }
+
+    private  void bindOrientNews(final News news, final OrientNewsHolder holder,int position){
+        GlideApp.with(host)
+                .load(news.thumbnail_images.medium.url)
+                .listener(new RequestListener<Drawable>() {
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model,
+                                                   Target<Drawable> target, DataSource dataSource,
+                                                   boolean isFirstResource) {
+                        if (!news.hasFadedIn) {
+                            holder.image.setHasTransientState(true);
+                            final ObservableColorMatrix cm = new ObservableColorMatrix();
+                            final ObjectAnimator saturation = ObjectAnimator.ofFloat(
+                                    cm, ObservableColorMatrix.SATURATION, 0f, 1f);
+                            saturation.addUpdateListener(valueAnimator -> {
+                                // just animating the color matrix does not invalidate the
+                                // drawable so need this update listener.  Also have to create a
+                                // new CMCF as the matrix is immutable :(
+                                holder.image.setColorFilter(new ColorMatrixColorFilter(cm));
+                            });
+                            saturation.setDuration(2000L);
+                            saturation.setInterpolator(getFastOutSlowInInterpolator(host));
+                            saturation.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    holder.image.clearColorFilter();
+                                    holder.image.setHasTransientState(false);
+                                }
+                            });
+                            saturation.start();
+                            news.hasFadedIn = true;
+                        }
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model,
+                                                Target<Drawable> target, boolean isFirstResource) {
+                        return false;
+                    }
+                })
+                .placeholder(shotLoadingPlaceholders[position % shotLoadingPlaceholders.length])
+                .diskCacheStrategy(DiskCacheStrategy.DATA)
+                .fitCenter()
+                .transition(withCrossFade())
+                .override(news.thumbnail_images.medium.width, news.thumbnail_images.medium.height)//todo image sizes
+                .into(new DribbbleTarget(holder.image, false));
+        // need both placeholder & background to prevent seeing through shot as it fades in
+        holder.image.setBackground(
+                shotLoadingPlaceholders[position % shotLoadingPlaceholders.length]);
+        holder.image.setDrawBadge(false);
+        // need a unique transition name per shot, let's use it's url
+        holder.image.setTransitionName(news.url);
+        shotPreloadSizeProvider.setView(holder.image);
+    }
+
+    @NonNull
     private DribbbleShotHolder createDribbbleShotHolder(ViewGroup parent) {
         final DribbbleShotHolder holder = new DribbbleShotHolder(
                 layoutInflater.inflate(R.layout.dribbble_shot_item, parent, false));
@@ -302,7 +424,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             if (drawable instanceof GifDrawable) {
                 gif = (GifDrawable) drawable;
             } else if (drawable instanceof TransitionDrawable) {
-                // we fade in images on load which uses a TransitionDrawable; check its layers
+                // we fade in thumbnail_images on load which uses a TransitionDrawable; check its layers
                 TransitionDrawable fadingIn = (TransitionDrawable) drawable;
                 for (int i = 0; i < fadingIn.getNumberOfLayers(); i++) {
                     if (fadingIn.getDrawable(i) instanceof GifDrawable) {
@@ -434,6 +556,9 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             } else if (item instanceof Post) {
                 return TYPE_PRODUCT_HUNT_POST;
             }
+            else if (item instanceof News){
+                return TYPE_ORIENT_NEWS_POST;
+            }
         }
         return TYPE_LOADING_MORE;
     }
@@ -483,6 +608,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         switch (items.get(0).dataSource) {
             // some sources should just use the natural order i.e. as returned by the API as users
             // have an expectation about the order they appear in
+            case SourceManager.SOURCE_ORIENT_RECENT:
             case SourceManager.SOURCE_DRIBBBLE_USER_SHOTS:
             case SourceManager.SOURCE_DRIBBBLE_USER_LIKES:
             case SourceManager.SOURCE_PRODUCT_HUNT:
@@ -715,6 +841,13 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
     }
 
+    static class OrientNewsHolder extends RecyclerView.ViewHolder implements Divided {
+        BadgedFourThreeImageView image;
+        public OrientNewsHolder(View itemView) {
+            super(itemView);
+            image = (BadgedFourThreeImageView) itemView;
+        }
+    }
     static class ProductHuntStoryHolder extends RecyclerView.ViewHolder implements Divided {
 
         @BindView(R.id.hunt_title) TextView title;

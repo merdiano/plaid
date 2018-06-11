@@ -21,7 +21,7 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 
 /**
- * Models links to the various quality of images of a shot.
+ * Models links to the various quality of thumbnail_images of a shot.
  */
 public class Images implements Parcelable {
 

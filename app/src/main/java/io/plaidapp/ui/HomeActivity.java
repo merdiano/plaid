@@ -89,6 +89,7 @@ import io.plaidapp.data.api.dribbble.model.Shot;
 import io.plaidapp.data.pocket.PocketUtils;
 import io.plaidapp.data.prefs.DesignerNewsPrefs;
 import io.plaidapp.data.prefs.DribbblePrefs;
+import io.plaidapp.data.prefs.OrientPrefs;
 import io.plaidapp.data.prefs.SourceManager;
 import io.plaidapp.ui.recyclerview.FilterTouchHelperCallback;
 import io.plaidapp.ui.recyclerview.GridItemDividerDecoration;
@@ -112,7 +113,7 @@ public class HomeActivity extends Activity {
     @BindView(R.id.drawer) DrawerLayout drawer;
     @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.grid) RecyclerView grid;
-    @BindView(R.id.fab) ImageButton fab;
+    //@BindView(R.id.fab) ImageButton fab;
     @BindView(R.id.filters) RecyclerView filtersList;
     @BindView(android.R.id.empty) ProgressBar loading;
     @Nullable @BindView(R.id.no_connection) ImageView noConnection;
@@ -129,6 +130,7 @@ public class HomeActivity extends Activity {
     FilterAdapter filtersAdapter;
     private DesignerNewsPrefs designerNewsPrefs;
     private DribbblePrefs dribbblePrefs;
+    private OrientPrefs orientPrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,6 +150,8 @@ public class HomeActivity extends Activity {
 
         dribbblePrefs = DribbblePrefs.get(this);
         designerNewsPrefs = DesignerNewsPrefs.get(this);
+        orientPrefs = OrientPrefs.get(this);
+
         filtersAdapter = new FilterAdapter(this, SourceManager.getSources(this),
                 (sharedElement, forSource) -> {
                     Intent login = new Intent(HomeActivity.this, DribbbleLogin.class);
@@ -168,7 +172,8 @@ public class HomeActivity extends Activity {
             }
         };
         ViewPreloadSizeProvider<Shot> shotPreloadSizeProvider = new ViewPreloadSizeProvider<>();
-        adapter = new FeedAdapter(this, dataManager, columns, PocketUtils.isPocketInstalled(this), shotPreloadSizeProvider);
+        adapter = new FeedAdapter(this, dataManager, columns,
+                PocketUtils.isPocketInstalled(this), shotPreloadSizeProvider);
 
         grid.setAdapter(adapter);
         layoutManager = new GridLayoutManager(this, columns);
@@ -214,11 +219,11 @@ public class HomeActivity extends Activity {
                     grid.getPaddingBottom() + insets.getSystemWindowInsetBottom());
 
             // inset the fab for the navbar
-            ViewGroup.MarginLayoutParams lpFab = (ViewGroup.MarginLayoutParams) fab
-                    .getLayoutParams();
-            lpFab.bottomMargin += insets.getSystemWindowInsetBottom(); // portrait
-            lpFab.rightMargin += insets.getSystemWindowInsetRight(); // landscape
-            fab.setLayoutParams(lpFab);
+//            ViewGroup.MarginLayoutParams lpFab = (ViewGroup.MarginLayoutParams) fab
+//                    .getLayoutParams();
+//            lpFab.bottomMargin += insets.getSystemWindowInsetBottom(); // portrait
+//            lpFab.rightMargin += insets.getSystemWindowInsetRight(); // landscape
+//            fab.setLayoutParams(lpFab);
 
             View postingStub = findViewById(R.id.stub_posting_progress);
             ViewGroup.MarginLayoutParams lpPosting =
@@ -411,7 +416,7 @@ public class HomeActivity extends Activity {
                 switch (resultCode) {
                     case PostNewDesignerNewsStory.RESULT_DRAG_DISMISSED:
                         // need to reshow the FAB as there's no shared element transition
-                        showFab();
+//                        showFab();
                         unregisterPostStoryResultListener();
                         break;
                     case PostNewDesignerNewsStory.RESULT_POSTING:
@@ -423,9 +428,9 @@ public class HomeActivity extends Activity {
                 }
                 break;
             case RC_NEW_DESIGNER_NEWS_LOGIN:
-                if (resultCode == RESULT_OK) {
-                    showFab();
-                }
+//                if (resultCode == RESULT_OK) {
+//                    showFab();
+//                }
                 break;
             case RC_AUTH_DRIBBBLE_FOLLOWING:
                 if (resultCode == RESULT_OK) {
@@ -492,26 +497,26 @@ public class HomeActivity extends Activity {
         }
     };
 
-    @OnClick(R.id.fab)
-    protected void fabClick() {
-        if (designerNewsPrefs.isLoggedIn()) {
-            Intent intent = new Intent(this, PostNewDesignerNewsStory.class);
-            FabTransform.addExtras(intent,
-                    ContextCompat.getColor(this, R.color.accent), R.drawable.ic_add_dark);
-            intent.putExtra(PostStoryService.EXTRA_BROADCAST_RESULT, true);
-            registerPostStoryResultListener();
-            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, fab,
-                    getString(R.string.transition_new_designer_news_post));
-            startActivityForResult(intent, RC_NEW_DESIGNER_NEWS_STORY, options.toBundle());
-        } else {
-            Intent intent = new Intent(this, DesignerNewsLogin.class);
-            FabTransform.addExtras(intent,
-                    ContextCompat.getColor(this, R.color.accent), R.drawable.ic_add_dark);
-            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, fab,
-                    getString(R.string.transition_designer_news_login));
-            startActivityForResult(intent, RC_NEW_DESIGNER_NEWS_LOGIN, options.toBundle());
-        }
-    }
+//    @OnClick(R.id.fab)
+//    protected void fabClick() {
+//        if (designerNewsPrefs.isLoggedIn()) {
+//            Intent intent = new Intent(this, PostNewDesignerNewsStory.class);
+//            FabTransform.addExtras(intent,
+//                    ContextCompat.getColor(this, R.color.accent), R.drawable.ic_add_dark);
+//            intent.putExtra(PostStoryService.EXTRA_BROADCAST_RESULT, true);
+//            registerPostStoryResultListener();
+//            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, fab,
+//                    getString(R.string.transition_new_designer_news_post));
+//            startActivityForResult(intent, RC_NEW_DESIGNER_NEWS_STORY, options.toBundle());
+//        } else {
+//            Intent intent = new Intent(this, DesignerNewsLogin.class);
+//            FabTransform.addExtras(intent,
+//                    ContextCompat.getColor(this, R.color.accent), R.drawable.ic_add_dark);
+//            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, fab,
+//                    getString(R.string.transition_designer_news_login));
+//            startActivityForResult(intent, RC_NEW_DESIGNER_NEWS_LOGIN, options.toBundle());
+//        }
+//    }
 
     BroadcastReceiver postStoryResultReceiver = new BroadcastReceiver() {
         @Override
@@ -718,20 +723,20 @@ public class HomeActivity extends Activity {
         }
     }
 
-    private void showFab() {
-        fab.setAlpha(0f);
-        fab.setScaleX(0f);
-        fab.setScaleY(0f);
-        fab.setTranslationY(fab.getHeight() / 2);
-        fab.animate()
-                .alpha(1f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .translationY(0f)
-                .setDuration(300L)
-                .setInterpolator(AnimUtils.getLinearOutSlowInInterpolator(this))
-                .start();
-    }
+//    private void showFab() {
+//        fab.setAlpha(0f);
+//        fab.setScaleX(0f);
+//        fab.setScaleY(0f);
+//        fab.setTranslationY(fab.getHeight() / 2);
+//        fab.animate()
+//                .alpha(1f)
+//                .scaleX(1f)
+//                .scaleY(1f)
+//                .translationY(0f)
+//                .setDuration(300L)
+//                .setInterpolator(AnimUtils.getLinearOutSlowInInterpolator(this))
+//                .start();
+//    }
 
     /**
      * Highlight the new source(s) by:
