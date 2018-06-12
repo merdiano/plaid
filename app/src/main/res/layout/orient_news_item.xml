@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:alignmentMode="alignBounds"
+    android:columnCount="3"
+    android:rowCount="7"
+    android:useDefaultMargins="false"
+    android:transitionGroup="false"
+    android:clipToPadding="false"
+    android:background="@android:color/transparent">
+    <!-- transparent background needed for the ripple on the spacer -->
+
+    <!-- spacer for the image -->
+    <io.plaidapp.ui.widget.BadgedFourThreeImageView
+        android:id="@+id/news_spacer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_columnSpan="3"
+        android:background="@drawable/mid_grey_bounded_ripple" />
+
+    <io.plaidapp.ui.widget.BaselineGridTextView
+        android:id="@+id/news_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/news_spacer"
+        android:layout_columnSpan="3"
+
+        android:background="@color/text_secondary_dark"
+        android:paddingBottom="@dimen/spacing_normal"
+        android:paddingEnd="@dimen/spacing_normal"
+        android:paddingStart="@dimen/spacing_normal"
+        android:paddingTop="@dimen/spacing_normal"
+        android:textAppearance="@style/TextAppearance.Filter"
+        tools:text="News title" />
+</RelativeLayout>

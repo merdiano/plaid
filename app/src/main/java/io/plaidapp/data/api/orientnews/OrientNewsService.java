@@ -25,6 +25,9 @@ public interface OrientNewsService {
     @GET("get_recent_posts")
     Call<NewsWrapper> getRecentPosts(@Query("page") Integer page);
 
+    @GET("get_category_posts")
+    Call<NewsWrapper> getCategoryPosts(@Query("page") Integer page,@Query("id") Integer id);
+
     @GET("get_post")
     Call<News> getPost(@Query("post_id") long postId);
 

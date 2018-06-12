@@ -322,11 +322,11 @@ public class HomeActivity extends Activity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        final MenuItem dribbbleLogin = menu.findItem(R.id.menu_dribbble_login);
-        if (dribbbleLogin != null) {
-            dribbbleLogin.setTitle(dribbblePrefs.isLoggedIn() ?
-                    R.string.dribbble_log_out : R.string.dribbble_login);
-        }
+//        final MenuItem dribbbleLogin = menu.findItem(R.id.menu_dribbble_login);
+//        if (dribbbleLogin != null) {
+//            dribbbleLogin.setTitle(dribbblePrefs.isLoggedIn() ?
+//                    R.string.dribbble_log_out : R.string.dribbble_login);
+//        }
         final MenuItem designerNewsLogin = menu.findItem(R.id.menu_designer_news_login);
         if (designerNewsLogin != null) {
             designerNewsLogin.setTitle(designerNewsPrefs.isLoggedIn() ?
@@ -347,16 +347,16 @@ public class HomeActivity extends Activity {
                         getString(R.string.transition_search_back)).toBundle();
                 startActivityForResult(new Intent(this, SearchActivity.class), RC_SEARCH, options);
                 return true;
-            case R.id.menu_dribbble_login:
-                if (!dribbblePrefs.isLoggedIn()) {
-                    dribbblePrefs.login(HomeActivity.this);
-                } else {
-                    dribbblePrefs.logout();
-                    // TODO something better than a toast!!
-                    Toast.makeText(getApplicationContext(), R.string.dribbble_logged_out, Toast
-                            .LENGTH_SHORT).show();
-                }
-                return true;
+//            case R.id.menu_dribbble_login:
+//                if (!dribbblePrefs.isLoggedIn()) {
+//                    dribbblePrefs.login(HomeActivity.this);
+//                } else {
+//                    dribbblePrefs.logout();
+//                    // TODO something better than a toast!!
+//                    Toast.makeText(getApplicationContext(), R.string.dribbble_logged_out, Toast
+//                            .LENGTH_SHORT).show();
+//                }
+//                return true;
             case R.id.menu_designer_news_login:
                 if (!designerNewsPrefs.isLoggedIn()) {
                     startActivity(new Intent(this, DesignerNewsLogin.class));
@@ -367,10 +367,10 @@ public class HomeActivity extends Activity {
                             Toast.LENGTH_SHORT).show();
                 }
                 return true;
-            case R.id.menu_about:
-                startActivity(new Intent(HomeActivity.this, AboutActivity.class),
-                        ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
-                return true;
+//            case R.id.menu_about:
+//                startActivity(new Intent(HomeActivity.this, AboutActivity.class),
+//                        ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
+//                return true;
         }
         return super.onOptionsItemSelected(item);
     }

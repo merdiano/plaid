@@ -16,7 +16,8 @@
   limitations under the License.
   -->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/menu_search"
@@ -30,19 +31,19 @@
         android:icon="@drawable/ic_filter"
         android:showAsAction="always" />
 
-    <item
-        android:id="@+id/menu_dribbble_login"
-        android:title="@string/dribbble_login"
-        android:showAsAction="never" />
+    <!--<item-->
+        <!--android:id="@+id/menu_dribbble_login"-->
+        <!--android:title="@string/dribbble_login"-->
+        <!--app:showAsAction="never" />-->
 
     <item
         android:id="@+id/menu_designer_news_login"
         android:title="@string/designer_news_login"
         android:showAsAction="never" />
 
-    <item
-        android:id="@+id/menu_about"
-        android:title="@string/about"
-        android:showAsAction="never" />
+    <!--<item-->
+        <!--android:id="@+id/menu_about"-->
+        <!--android:title="@string/about"-->
+        <!--android:showAsAction="never" />-->
 
 </menu>

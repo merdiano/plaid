@@ -83,6 +83,7 @@ import io.plaidapp.ui.recyclerview.Divided;
 import io.plaidapp.ui.transitions.ReflowText;
 import io.plaidapp.ui.widget.BadgedFourThreeImageView;
 import io.plaidapp.ui.widget.BaselineGridTextView;
+import io.plaidapp.ui.widget.FourThreeImageView;
 import io.plaidapp.util.ObservableColorMatrix;
 import io.plaidapp.util.TransitionUtils;
 import io.plaidapp.util.ViewUtils;
@@ -281,8 +282,9 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @NonNull
     private OrientNewsHolder createOrientNewsHolder(ViewGroup parent) {
         final OrientNewsHolder holder = new OrientNewsHolder(
-                layoutInflater.inflate(R.layout.dribbble_shot_item, parent, false));
+                layoutInflater.inflate(R.layout.orient_news_item, parent, false));
         holder.image.setBadgeColor(initialGifBadgeColor);
+
         holder.image.setOnClickListener(view -> {
             Intent intent = new Intent();
             intent.setClass(host, OrientNewsActivity.class);//todo orient
@@ -336,6 +338,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     private  void bindOrientNews(final News news, final OrientNewsHolder holder,int position){
+        holder.title.setText(news.title);
+        holder.title.setAlpha(1f); // interrupted add to pocket anim can mangle
         GlideApp.with(host)
                 .load(news.thumbnail_images.medium.url)
                 .listener(new RequestListener<Drawable>() {
@@ -609,8 +613,14 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             // some sources should just use the natural order i.e. as returned by the API as users
             // have an expectation about the order they appear in
             case SourceManager.SOURCE_ORIENT_RECENT:
-            case SourceManager.SOURCE_DRIBBBLE_USER_SHOTS:
-            case SourceManager.SOURCE_DRIBBBLE_USER_LIKES:
+            case SourceManager.SOURCE_ORIENT_CULTURE:
+            case SourceManager.SOURCE_ORIENT_ECOMOMY:
+            case SourceManager.SOURCE_ORIENT_EVENTS:
+            case SourceManager.SOURCE_ORIENT_SOCIETY:
+            case SourceManager.SOURCE_ORIENT_SPORT:
+            case SourceManager.SOURCE_ORIENT_TECH:
+            case SourceManager.SOURCE_ORIENT_TENDER:
+            case SourceManager.SOURCE_ORIENT_WORLD:
             case SourceManager.SOURCE_PRODUCT_HUNT:
             case PlayerShotsDataManager.SOURCE_PLAYER_SHOTS:
             case PlayerShotsDataManager.SOURCE_TEAM_SHOTS:
@@ -672,9 +682,9 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         final int count = items.size();
         for (int i = 0; i < count; i++) {
             PlaidItem item = getItem(i);
-            if (item instanceof Shot && item.page > page) {
+            if (item instanceof News ) {
                 item.colspan = columns;
-                page = item.page;
+//                page = item.page;
                 expandedPositions.add(i);
             } else {
                 item.colspan = 1;
@@ -842,10 +852,11 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     static class OrientNewsHolder extends RecyclerView.ViewHolder implements Divided {
-        BadgedFourThreeImageView image;
+        @BindView(R.id.news_spacer)BadgedFourThreeImageView image;
+        @BindView(R.id.news_title) BaselineGridTextView title;
         public OrientNewsHolder(View itemView) {
             super(itemView);
-            image = (BadgedFourThreeImageView) itemView;
+            ButterKnife.bind(this, itemView);
         }
     }
     static class ProductHuntStoryHolder extends RecyclerView.ViewHolder implements Divided {

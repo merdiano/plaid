@@ -33,9 +33,9 @@
     <string name="dribbble_login">Log in to Dribbble</string>
     <string name="dribbble_log_out">Log out of Dribbble</string>
     <string name="dribbble_logged_out">Logged out of Dribbble</string>
-    <string name="designer_news_login">Log in to Designer News</string>
-    <string name="designer_news_log_out">Log out of Designer News</string>
-    <string name="designer_news_logged_out">Logged out of Designer News</string>
+    <string name="designer_news_login">Log in to Orient News</string>
+    <string name="designer_news_log_out">Log out of Orient News</string>
+    <string name="designer_news_logged_out">Logged out of Orient News</string>
     <string name="add">Add</string>
     <string name="edit">Edit</string>
     <string name="no_filters_selected">No filters selected, press the filter button above (<annotation src="@drawable/ic_filter_small">&#2228;</annotation>)\n<i><annotation foregroundColor="@color/text_secondary_light">or swipe from the&#160;right</annotation></i></string>
@@ -54,7 +54,7 @@
     <string name="source_product_hunt">Product Hunt</string>
 
     <!-- Search -->
-    <string name="search_hint">Search Dribbble &amp; Designer News</string>
+    <string name="search_hint">Search Orient News</string>
     <string name="no_search_results">No results for\n“%1$s”</string>
     <string name="confirm_save_dribbble_search">Save Dribbble</string>
     <string name="confirm_save_designer_news_search">Save Designer News</string>
@@ -160,5 +160,13 @@
     <string name="transition_search_back" translatable="false">transition_search_back</string>
 
     <string name="comment_likes_count">0</string>
-    <string name="source_orient_news_popular">Recent Orient News</string>
+    <string name="source_orient_news_recent">Recent News</string>
+    <string name="source_orient_news_events">Events</string>
+    <string name="source_orient_news_tender">Tenders</string>
+    <string name="source_orient_news_tech">Technology</string>
+    <string name="source_orient_news_world">World News</string>
+    <string name="source_orient_news_economy">Economy</string>
+    <string name="source_orient_news_culture">Culture</string>
+    <string name="source_orient_news_society">Society</string>
+    <string name="source_orient_news_sport">Sports News</string>
 </resources>

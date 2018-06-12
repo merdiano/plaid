@@ -93,15 +93,15 @@ public class OrientNewsActivity extends Activity {
     private static final int RC_LOGIN_COMMENT = 1;
     private static final float SCRIM_ADJUSTMENT = 0.075f;
 
-    @BindView(R.id.draggable_frame_o)
+    @BindView(R.id.draggable_frame)
     ElasticDragDismissFrameLayout draggableFrame;
-    @BindView(R.id.back_o)
+    @BindView(R.id.back)
     ImageButton back;
-    @BindView(R.id.news)
+    @BindView(R.id.shot)
     ParallaxScrimageView imageView;
-    @BindView(R.id.dribbble_comments_o)
+    @BindView(R.id.dribbble_comments)
     RecyclerView commentsList;
-    @BindView(R.id.fab_heart_o)
+    @BindView(R.id.fab_heart)
     FABToggle fab;
     View shotDescription;
     View shotSpacer;
@@ -133,7 +133,7 @@ public class OrientNewsActivity extends Activity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_orientnews);
+        setContentView(R.layout.activity_dribbble_shot);
         orientPrefs = OrientPrefs.get(this);
         ButterKnife.bind(this);
         shotDescription = getLayoutInflater().inflate(R.layout.dribbble_shot_description,
@@ -282,15 +282,21 @@ public class OrientNewsActivity extends Activity {
 
         // load the main image
 //        final int[] imageSize = shot.thumbnail_images.bestSize();
-        Image pic = news.thumbnail_images.medium;
-        GlideApp.with(this)
-                .load(pic.url)
-                .listener(shotLoadListener)
-                .diskCacheStrategy(DiskCacheStrategy.DATA)
-                .priority(Priority.IMMEDIATE)
-                .override(Images.TWO_X_IMAGE_SIZE[0], Images.TWO_X_IMAGE_SIZE[1])
-                .transition(withCrossFade())
-                .into(imageView);
+        try{
+            Image pic = news.thumbnail_images.medium;
+            GlideApp.with(this)
+                    .load(pic.url)
+                    .listener(shotLoadListener)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    .priority(Priority.IMMEDIATE)
+                    .override(Images.TWO_X_IMAGE_SIZE[0], Images.TWO_X_IMAGE_SIZE[1])
+                    .transition(withCrossFade())
+                    .into(imageView);
+        }catch (NullPointerException ex){
+
+        }
+
+
         imageView.setOnClickListener(shotClick);
         shotSpacer.setOnClickListener(shotClick);
 
