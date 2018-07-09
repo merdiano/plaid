@@ -39,6 +39,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -143,6 +144,9 @@ public class HomeActivity extends Activity {
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
 
         setActionBar(toolbar);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getActionBar().setHomeAsUpIndicator(R.drawable.ic_filter);
+        //getActionBar().setElevation(0);
         if (savedInstanceState == null) {
             animateToolbar();
         }
@@ -152,6 +156,8 @@ public class HomeActivity extends Activity {
         designerNewsPrefs = DesignerNewsPrefs.get(this);
         orientPrefs = OrientPrefs.get(this);
 
+//        filtersList.addItemDecoration(new DividerItemDecoration(getApplicationContext(),
+//                DividerItemDecoration.VERTICAL));
         filtersAdapter = new FilterAdapter(this, SourceManager.getSources(this),
                 (sharedElement, forSource) -> {
                     Intent login = new Intent(HomeActivity.this, DribbbleLogin.class);
@@ -335,11 +341,15 @@ public class HomeActivity extends Activity {
         return true;
     }
 
+//    @OnClick(R.id.btn_filter)
+//    protected void onFilterClick(View view){
+//        drawer.openDrawer(GravityCompat.START);
+//    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_filter:
-                drawer.openDrawer(GravityCompat.END);
+            case android.R.id.home:
+                drawer.openDrawer(GravityCompat.START);
                 return true;
             case R.id.menu_search:
                 View searchMenuView = toolbar.findViewById(R.id.menu_search);

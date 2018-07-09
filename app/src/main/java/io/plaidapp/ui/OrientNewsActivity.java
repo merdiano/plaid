@@ -26,16 +26,21 @@ import android.text.format.DateUtils;
 import android.transition.AutoTransition;
 import android.transition.Transition;
 import android.transition.TransitionManager;
+import android.util.Log;
 import android.util.Pair;
 import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.load.DataSource;
@@ -95,14 +100,15 @@ public class OrientNewsActivity extends Activity {
 
     @BindView(R.id.draggable_frame)
     ElasticDragDismissFrameLayout draggableFrame;
-    @BindView(R.id.back)
-    ImageButton back;
-    @BindView(R.id.shot)
-    ParallaxScrimageView imageView;
+//    @BindView(R.id.back)
+//    ImageButton back;
+//    @BindView(R.id.shot)
+//    ParallaxScrimageView imageView;
     @BindView(R.id.dribbble_comments)
     RecyclerView commentsList;
-    @BindView(R.id.fab_heart)
-    FABToggle fab;
+//    @BindView(R.id.fab_heart)
+//    FABToggle fab;
+    WebView webDesc;
     View shotDescription;
     View shotSpacer;
     Button likeCount;
@@ -110,7 +116,7 @@ public class OrientNewsActivity extends Activity {
     Button share;
     ImageView playerAvatar;
     EditText enterComment;
-    ImageButton postComment;
+//    ImageButton postComment;
     private View title;
     private View description;
     private TextView playerName;
@@ -129,13 +135,16 @@ public class OrientNewsActivity extends Activity {
     OrientNewsActivity.CommentAnimator commentAnimator;
     @BindDimen(R.dimen.large_avatar_size) int largeAvatarSize;
     @BindDimen(R.dimen.z_card) int cardElevation;
-
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_dribbble_shot);
+        setContentView(R.layout.activity_orientnews);
         orientPrefs = OrientPrefs.get(this);
         ButterKnife.bind(this);
+//        getActionBar().setHomeButtonEnabled(true);
+//        getActionBar().setDisplayHomeAsUpEnabled(true);
         shotDescription = getLayoutInflater().inflate(R.layout.dribbble_shot_description,
                 commentsList, false);
         shotSpacer = shotDescription.findViewById(R.id.shot_spacer);
@@ -147,22 +156,28 @@ public class OrientNewsActivity extends Activity {
         playerName = shotDescription.findViewById(R.id.player_name);
         playerAvatar = shotDescription.findViewById(R.id.player_avatar);
         shotTimeAgo = shotDescription.findViewById(R.id.shot_time_ago);
-
+        webDesc = shotDescription.findViewById(R.id.web_description);
         setupCommenting();
         commentsList.addOnScrollListener(scrollListener);
         commentsList.setOnFlingListener(flingListener);
-        back.setOnClickListener(v -> setResultAndFinish());
-        fab.setOnClickListener(fabClick);
+//        back.setOnClickListener(v -> setResultAndFinish());
+//        fab.setOnClickListener(fabClick);
         chromeFader = new ElasticDragDismissFrameLayout.SystemChromeFader(this) {
             @Override
             public void onDragDismissed() {
                 setResultAndFinish();
             }
         };
+        setActionBar(toolbar);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getActionBar().setHomeButtonEnabled(true);
 
         final Intent intent = getIntent();
-        if (intent.hasExtra(EXTRA_SHOT)) {
-            news = intent.getParcelableExtra(EXTRA_SHOT);
+        Bundle b = intent.getBundleExtra("bundle");
+        news =b.getParcelable(EXTRA_SHOT);
+        //intent.setExtrasClassLoader(News.class.getClassLoader());
+        if (news !=null) {
+            //getActionBar().setTitle(news.title);
             bindShot(true);
         } else if (intent.getData() != null) {
             final HttpUrl url = HttpUrl.parse(intent.getDataString());
@@ -214,13 +229,27 @@ public class OrientNewsActivity extends Activity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.news_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.fontAction){
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case RC_LOGIN_LIKE:
                 if (resultCode == RESULT_OK) {
                     // TODO when we add more authenticated actions will need to keep track of what
                     // the user was trying to do when forced to login
-                    fab.setChecked(true);
+//                    fab.setChecked(true);
                     doLike();
                     setupCommenting();
                 }
@@ -282,50 +311,55 @@ public class OrientNewsActivity extends Activity {
 
         // load the main image
 //        final int[] imageSize = shot.thumbnail_images.bestSize();
-        try{
-            Image pic = news.thumbnail_images.medium;
-            GlideApp.with(this)
-                    .load(pic.url)
-                    .listener(shotLoadListener)
-                    .diskCacheStrategy(DiskCacheStrategy.DATA)
-                    .priority(Priority.IMMEDIATE)
-                    .override(Images.TWO_X_IMAGE_SIZE[0], Images.TWO_X_IMAGE_SIZE[1])
-                    .transition(withCrossFade())
-                    .into(imageView);
-        }catch (NullPointerException ex){
+//        try{
+//            Image pic = news.thumbnail_images.medium;
+//            GlideApp.with(this)
+//                    .load(pic.url)
+//                    .listener(shotLoadListener)
+//                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+//                    .priority(Priority.IMMEDIATE)
+//                    .override(Images.TWO_X_IMAGE_SIZE[0], Images.TWO_X_IMAGE_SIZE[1])
+//                    .transition(withCrossFade())
+//                    .into(imageView);
+//        }catch (NullPointerException ex){
+//
+//        }
+//
+//
+//        imageView.setOnClickListener(shotClick);
+//        shotSpacer.setOnClickListener(shotClick);
 
-        }
+//        if (postponeEnterTransition) postponeEnterTransition();
+//        imageView.getViewTreeObserver().addOnPreDrawListener(
+//                new ViewTreeObserver.OnPreDrawListener() {
+//                    @Override
+//                    public boolean onPreDraw() {
+//                        imageView.getViewTreeObserver().removeOnPreDrawListener(this);
+//                        calculateFabPosition();
+//                        if (postponeEnterTransition) startPostponedEnterTransition();
+//                            return true;
+//                    }
+//
+//                });
 
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            ((FabOverlapTextView) title).setText(news.title);
+//        } else {
+//            ((TextView) title).setText(news.title);
+//        }
+        ((TextView) title).setText(news.title);
+        if (!TextUtils.isEmpty(news.content)) {
+//            final Spanned descText = news.getParsedDescription(
+//                    ContextCompat.getColorStateList(this, R.color.dribbble_links),
+//                    ContextCompat.getColor(this, R.color.dribbble_link_highlight));
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                ((FabOverlapTextView) description).setText(descText);
+//            } else {
+//                HtmlUtils.setTextWithNiceLinks((TextView) description, descText);
+//            }
+            final String content = "<style type='text/css'> img {max-width: 100%;height:initial;}</style>"+news.content;
+            webDesc.loadData(content, "text/html; charset=utf-8", "utf-8");
 
-        imageView.setOnClickListener(shotClick);
-        shotSpacer.setOnClickListener(shotClick);
-
-        if (postponeEnterTransition) postponeEnterTransition();
-        imageView.getViewTreeObserver().addOnPreDrawListener(
-                new ViewTreeObserver.OnPreDrawListener() {
-                    @Override
-                    public boolean onPreDraw() {
-                        imageView.getViewTreeObserver().removeOnPreDrawListener(this);
-                        calculateFabPosition();
-                        if (postponeEnterTransition) startPostponedEnterTransition();
-                        return true;
-                    }
-                });
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ((FabOverlapTextView) title).setText(news.title);
-        } else {
-            ((TextView) title).setText(news.title);
-        }
-        if (!TextUtils.isEmpty(news.excerpt)) {
-            final Spanned descText = news.getParsedDescription(
-                    ContextCompat.getColorStateList(this, R.color.dribbble_links),
-                    ContextCompat.getColor(this, R.color.dribbble_link_highlight));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                ((FabOverlapTextView) description).setText(descText);
-            } else {
-                HtmlUtils.setTextWithNiceLinks((TextView) description, descText);
-            }
         } else {
             description.setVisibility(View.GONE);
         }
@@ -339,14 +373,14 @@ public class OrientNewsActivity extends Activity {
 //                PlayerSheet.start(OrientNewsActivity.this, shot);
 //            }
 //        });
-//        if (shot.likes_count == 0) {
+//        if (shot.likes_count == 0) {64555958
 //            likeCount.setBackground(null); // clear touch ripple if doesn't do anything
 //        }
         //todo view count
         viewCount.setText(
-                res.getQuantityString(R.plurals.views,0,
-                        nf.format(0)));
-//        viewCount.setOnClickListener(v -> ((AnimatedVectorDrawable) viewCount.getCompoundDrawables()[1]).start());
+                res.getQuantityString(R.plurals.views,news.views,
+                        nf.format(news.views)));
+        viewCount.setOnClickListener(v -> ((AnimatedVectorDrawable) viewCount.getCompoundDrawables()[1]).start());
         share.setOnClickListener(v -> {
             ((AnimatedVectorDrawable) share.getCompoundDrawables()[1]).start();
             new ShareOrientImageTask(OrientNewsActivity.this, news).execute();
@@ -454,10 +488,10 @@ public class OrientNewsActivity extends Activity {
                             isDark = lightness == ColorUtils.IS_DARK;
                         }
 
-                        if (!isDark) { // make back icon dark on light thumbnail_images
-                            back.setColorFilter(ContextCompat.getColor(
-                                    OrientNewsActivity.this, R.color.dark_icon));
-                        }
+//                        if (!isDark) { // make back icon dark on light thumbnail_images
+//                            back.setColorFilter(ContextCompat.getColor(
+//                                    OrientNewsActivity.this, R.color.dark_icon));
+//                        }
 
                         // color the status bar. Set a complementary dark color on L,
                         // light or dark color on M (with matching status bar icons)
@@ -469,13 +503,13 @@ public class OrientNewsActivity extends Activity {
                             statusBarColor = ColorUtils.scrimify(topColor.getRgb(),
                                     isDark, SCRIM_ADJUSTMENT);
                             // set a light status bar on M+
-                            if (!isDark && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                ViewUtils.setLightStatusBar(imageView);
-                            }
+//                            if (!isDark && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                                ViewUtils.setLightStatusBar(imageView);
+//                            }
                         }
 
                         if (statusBarColor != getWindow().getStatusBarColor()) {
-                            imageView.setScrimColor(statusBarColor);
+//                            imageView.setScrimColor(statusBarColor);
                             ValueAnimator statusBarColorAnim = ValueAnimator.ofArgb(
                                     getWindow().getStatusBarColor(), statusBarColor);
                             statusBarColorAnim.addUpdateListener(animation -> getWindow().setStatusBarColor(
@@ -497,14 +531,14 @@ public class OrientNewsActivity extends Activity {
                                         true));
                         // slightly more opaque ripple on the pinned image to compensate
                         // for the scrim
-                        imageView.setForeground(
-                                ViewUtils.createRipple(palette, 0.3f, 0.6f,
-                                        ContextCompat.getColor(OrientNewsActivity.this, R.color.mid_grey),
-                                        true));
+//                        imageView.setForeground(
+//                                ViewUtils.createRipple(palette, 0.3f, 0.6f,
+//                                        ContextCompat.getColor(OrientNewsActivity.this, R.color.mid_grey),
+//                                        true));
                     });
 
             // TODO should keep the background if the image contains transparency?!
-            imageView.setBackground(null);
+//            imageView.setBackground(null);
             return false;
         }
 
@@ -515,29 +549,29 @@ public class OrientNewsActivity extends Activity {
         }
     };
 
-    private View.OnFocusChangeListener enterCommentFocus = new View.OnFocusChangeListener() {
-        @Override
-        public void onFocusChange(View view, boolean hasFocus) {
-            // kick off an anim (via animated state list) on the post button. see
-            // @drawable/ic_add_comment
-            postComment.setActivated(hasFocus);
-
-            // prevent content hovering over image when not pinned.
-            if(hasFocus) {
-                imageView.bringToFront();
-                imageView.setOffset(-imageView.getHeight());
-                imageView.setImmediatePin(true);
-            }
-        }
-    };
+//    private View.OnFocusChangeListener enterCommentFocus = new View.OnFocusChangeListener() {
+//        @Override
+//        public void onFocusChange(View view, boolean hasFocus) {
+//            // kick off an anim (via animated state list) on the post button. see
+//            // @drawable/ic_add_comment
+//            postComment.setActivated(hasFocus);
+//
+//            // prevent content hovering over image when not pinned.
+//            if(hasFocus) {
+//                imageView.bringToFront();
+//                imageView.setOffset(-imageView.getHeight());
+//                imageView.setImmediatePin(true);
+//            }
+//        }
+//    };
 
     private RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
 
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             final int scrollY = shotDescription.getTop();
-            imageView.setOffset(scrollY);
-            fab.setOffset(fabOffset + scrollY);
+//            imageView.setOffset(scrollY);
+//            fab.setOffset(fabOffset + scrollY);
         }
 
         @Override
@@ -545,14 +579,14 @@ public class OrientNewsActivity extends Activity {
             // as we animate the main image's elevation change when it 'pins' at it's min height
             // a fling can cause the title to go over the image before the animation has a chance to
             // run. In this case we short circuit the animation and just jump to state.
-            imageView.setImmediatePin(newState == RecyclerView.SCROLL_STATE_SETTLING);
+//            imageView.setImmediatePin(newState == RecyclerView.SCROLL_STATE_SETTLING);
         }
     };
 
     private RecyclerView.OnFlingListener flingListener = new RecyclerView.OnFlingListener() {
         @Override
         public boolean onFling(int velocityX, int velocityY) {
-            imageView.setImmediatePin(true);
+//            imageView.setImmediatePin(true);
             return false;
         }
     };
@@ -574,7 +608,7 @@ public class OrientNewsActivity extends Activity {
         }
     };
 
-    void loadComments() {
+//    void loadComments() {
 //        final Call<List<Comment>> commentsCall =
 //                dribbblePrefs.getApi().getComments(shot.id, 0, DribbbleService.PER_PAGE_MAX);
 //        commentsCall.enqueue(new Callback<List<Comment>>() {
@@ -588,7 +622,7 @@ public class OrientNewsActivity extends Activity {
 //
 //            @Override public void onFailure(Call<List<Comment>> call, Throwable t) { }
 //        });
-    }
+//    }
 
     void setResultAndFinish() {
         final Intent resultData = new Intent();
@@ -599,11 +633,11 @@ public class OrientNewsActivity extends Activity {
 
     void calculateFabPosition() {
         // calculate 'natural' position i.e. with full height image. Store it for use when scrolling
-        fabOffset = imageView.getHeight() + title.getHeight() - (fab.getHeight() / 2);
-        fab.setOffset(fabOffset);
+//        fabOffset = imageView.getHeight() + title.getHeight() - (fab.getHeight() / 2);
+//        fab.setOffset(fabOffset);
 
         // calculate min position i.e. pinned to the collapsed image when scrolled
-        fab.setMinOffset(imageView.getMinimumHeight() - (fab.getHeight() / 2));
+//        fab.setMinOffset(imageView.getMinimumHeight() - (fab.getHeight() / 2));
     }
 
     void doLike() {

@@ -33,6 +33,7 @@ buildscript {
         maven {
             url "https://maven.google.com"
         }
+
     }
 
     dependencies {
@@ -40,8 +41,4 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
     }
 
-}
-
-repositories {
-    google()
 }

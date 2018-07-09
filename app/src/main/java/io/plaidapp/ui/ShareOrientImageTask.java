@@ -46,7 +46,7 @@ public class ShareOrientImageTask extends AsyncTask<Void, Void, File> {
         if (result == null) { return; }
         // glide cache uses an unfriendly & extension-less name,
         // massage it based on the original
-        String fileName = news.thumbnail;
+        String fileName = news.url;
         fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
         File renamed = new File(result.getParent(), fileName);
         result.renameTo(renamed);

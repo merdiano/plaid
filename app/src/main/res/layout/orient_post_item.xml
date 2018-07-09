@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<io.plaidapp.ui.widget.ForegroundRelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?android:listPreferredItemHeight"
+    android:paddingTop="@dimen/padding_normal"
+    android:paddingEnd="@dimen/padding_normal"
+    android:paddingBottom="@dimen/padding_normal"
+    android:clipToPadding="false"
+    android:foreground="?android:selectableItemBackground"
+    android:background="@drawable/comment_background"
+    android:stateListAnimator="@animator/comment_selection"
+    android:descendantFocusability="blocksDescendants">
+
+    <ImageView
+        android:id="@+id/news_spacer"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_alignBottom="@+id/comment_text"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="@dimen/spacing_normal"
+        android:layout_marginStart="@dimen/padding_normal"
+        android:contentDescription="@string/app_name" />
+
+    <!--<io.plaidapp.ui.widget.BaselineGridTextView-->
+        <!--android:id="@+id/comment_time_ago"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentTop="true"-->
+        <!--android:layout_alignParentEnd="true"-->
+        <!--android:paddingTop="@dimen/spacing_micro"-->
+        <!--android:paddingEnd="@dimen/padding_normal"-->
+        <!--android:textAppearance="@style/TextAppearance.CommentTimestamp"-->
+        <!--tools:text="3 hours ago" />-->
+
+    <io.plaidapp.ui.widget.AuthorTextView
+        android:id="@+id/news_title"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@id/news_spacer"
+
+        android:paddingTop="@dimen/spacing_micro"
+        android:ellipsize="end"
+        android:textAppearance="@style/TextAppearance.CommentAuthor.DesignerNews"
+        tools:text="Nick B" />
+
+    <io.plaidapp.ui.widget.BaselineGridTextView
+        android:id="@+id/content_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:paddingStart="@dimen/padding_normal"
+        android:paddingEnd="@dimen/padding_normal"
+        android:paddingBottom="@dimen/padding_normal"
+        android:textAppearance="@style/TextAppearance.Comment"
+        android:textColorHighlight="@color/designer_news_link_highlight"
+        android:textColorLink="@color/designer_news_links"
+        tools:text="Dude do you use sketch? You should totally use sketch. Should designers code??" />
+
+</io.plaidapp.ui.widget.ForegroundRelativeLayout>

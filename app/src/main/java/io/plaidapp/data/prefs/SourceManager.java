@@ -34,7 +34,7 @@ import io.plaidapp.data.Source;
  */
 public class SourceManager {
 
-    public static final String SOURCE_DESIGNER_NEWS_POPULAR = "SOURCE_DESIGNER_NEWS_POPULAR";
+//    public static final String SOURCE_DESIGNER_NEWS_POPULAR = "SOURCE_DESIGNER_NEWS_POPULAR";
 //    public static final String SOURCE_DESIGNER_NEWS_RECENT = "SOURCE_DESIGNER_NEWS_RECENT";
 //    public static final String SOURCE_DRIBBBLE_POPULAR = "SOURCE_DRIBBBLE_POPULAR";
     public static final String SOURCE_DRIBBBLE_FOLLOWING = "SOURCE_DRIBBBLE_FOLLOWING";
@@ -43,7 +43,7 @@ public class SourceManager {
 //    public static final String SOURCE_DRIBBBLE_RECENT = "SOURCE_DRIBBBLE_RECENT";
 //    public static final String SOURCE_DRIBBBLE_DEBUTS = "SOURCE_DRIBBBLE_DEBUTS";
 //    public static final String SOURCE_DRIBBBLE_ANIMATED = "SOURCE_DRIBBBLE_ANIMATED";
-    public static final String SOURCE_PRODUCT_HUNT = "SOURCE_PRODUCT_HUNT";
+//    public static final String SOURCE_PRODUCT_HUNT = "SOURCE_PRODUCT_HUNT";
     //orient posts
     public static final String SOURCE_ORIENT_RECENT = "SOURCE_ORIENT_RECENT";
     public static final String SOURCE_ORIENT_ECOMOMY = "SOURCE_ORIENT_ECOMOMY";
@@ -143,7 +143,7 @@ public class SourceManager {
 
     private static ArrayList<Source> getDefaultSources(Context context) {
         ArrayList<Source> defaultSources = new ArrayList<>(11);
-        //todo add orient default Sorces
+
         defaultSources.add(new Source.OrientSource(SOURCE_ORIENT_RECENT,1,
                 context.getString(R.string.source_orient_news_recent), true));
         defaultSources.add(new Source.OrientSource(SOURCE_ORIENT_EVENTS,2,
@@ -162,8 +162,8 @@ public class SourceManager {
                 context.getString(R.string.source_orient_news_tech), false));
         defaultSources.add(new Source.OrientSource(SOURCE_ORIENT_TENDER,101,
                 context.getString(R.string.source_orient_news_tender), false));
-        defaultSources.add(new Source.DesignerNewsSource(SOURCE_DESIGNER_NEWS_POPULAR, 100,
-                context.getString(R.string.source_designer_news_popular), false));
+//        defaultSources.add(new Source.DesignerNewsSource(SOURCE_DESIGNER_NEWS_POPULAR, 100,
+//                context.getString(R.string.source_designer_news_popular), false));
 //        defaultSources.add(new Source.DesignerNewsSource(SOURCE_DESIGNER_NEWS_RECENT, 101,
 //                context.getString(R.string.source_designer_news_recent), false));
         // 200 sort order range left for DN searches
@@ -181,12 +181,12 @@ public class SourceManager {
 //                context.getString(R.string.source_dribbble_debuts), false));
 //        defaultSources.add(new Source.DribbbleSource(SOURCE_DRIBBBLE_ANIMATED, 306,
 //                context.getString(R.string.source_dribbble_animated), false));
-        defaultSources.add(new Source.DribbbleSearchSource(context.getString(R.string
-                .source_dribbble_search_material_design), false));
+//        defaultSources.add(new Source.DribbbleSearchSource(context.getString(R.string
+//                .source_dribbble_search_material_design), false));
         // 400 sort order range left for dribbble searches
-        defaultSources.add(new Source(SOURCE_PRODUCT_HUNT, 500,
-                context.getString(R.string.source_product_hunt),
-                R.drawable.ic_product_hunt, false));
+//        defaultSources.add(new Source(SOURCE_PRODUCT_HUNT, 500,
+//                context.getString(R.string.source_product_hunt),
+//                R.drawable.ic_product_hunt, false));
         return defaultSources;
     }
 

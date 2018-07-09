@@ -99,12 +99,12 @@ public abstract class DataManager extends BaseDataManager<List<? extends PlaidIt
             switch (source.key) {
                 case SourceManager.SOURCE_ORIENT_RECENT:
                     loadOrientRecent(page);
-                case SourceManager.SOURCE_DESIGNER_NEWS_POPULAR:
-                    loadDesignerNewsTopStories(page);
-                    break;
-                case SourceManager.SOURCE_PRODUCT_HUNT:
-                    loadProductHunt(page);
-                    break;
+//                case SourceManager.SOURCE_DESIGNER_NEWS_POPULAR:
+//                    loadDesignerNewsTopStories(page);
+//                    break;
+//                case SourceManager.SOURCE_PRODUCT_HUNT:
+//                    loadProductHunt(page);
+//                    break;
 
                 default:
                     if (source instanceof Source.DribbbleSearchSource) {
@@ -198,25 +198,25 @@ public abstract class DataManager extends BaseDataManager<List<? extends PlaidIt
             }
         });
     }
-    private void loadDesignerNewsTopStories(final int page) {
-        final Call<List<Story>> topStories = getDesignerNewsApi().getTopStories(page);
-        topStories.enqueue(new Callback<List<Story>>() {
-            @Override
-            public void onResponse(Call<List<Story>> call, Response<List<Story>> response) {
-                if (response.isSuccessful()) {
-                    sourceLoaded(response.body(), page, SourceManager.SOURCE_DESIGNER_NEWS_POPULAR);
-                } else {
-                    loadFailed(SourceManager.SOURCE_DESIGNER_NEWS_POPULAR);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Story>> call, Throwable t) {
-                loadFailed(SourceManager.SOURCE_DESIGNER_NEWS_POPULAR);
-            }
-        });
-        inflight.put(SourceManager.SOURCE_DESIGNER_NEWS_POPULAR, topStories);
-    }
+//    private void loadDesignerNewsTopStories(final int page) {
+//        final Call<List<Story>> topStories = getDesignerNewsApi().getTopStories(page);
+//        topStories.enqueue(new Callback<List<Story>>() {
+//            @Override
+//            public void onResponse(Call<List<Story>> call, Response<List<Story>> response) {
+//                if (response.isSuccessful()) {
+//                    sourceLoaded(response.body(), page, SourceManager.SOURCE_DESIGNER_NEWS_POPULAR);
+//                } else {
+//                    loadFailed(SourceManager.SOURCE_DESIGNER_NEWS_POPULAR);
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<List<Story>> call, Throwable t) {
+//                loadFailed(SourceManager.SOURCE_DESIGNER_NEWS_POPULAR);
+//            }
+//        });
+//        inflight.put(SourceManager.SOURCE_DESIGNER_NEWS_POPULAR, topStories);
+//    }
 
 //    private void loadDesignerNewsRecent(final int page) {
 //        final Call<List<Story>> recentStoriesCall = getDesignerNewsApi().getRecentStories(page);
@@ -477,24 +477,24 @@ public abstract class DataManager extends BaseDataManager<List<? extends PlaidIt
         inflight.put(source.key, searchCall);
     }
 
-    private void loadProductHunt(final int page) {
-        // this API's paging is 0 based but this class (& sorting) is 1 based so adjust locally
-        final Call<List<Post>> postsCall = getProductHuntApi().getPosts(page - 1);
-        postsCall.enqueue(new Callback<List<Post>>() {
-            @Override
-            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
-                if (response.isSuccessful()) {
-                    sourceLoaded(response.body(), page, SourceManager.SOURCE_PRODUCT_HUNT);
-                } else {
-                    loadFailed(SourceManager.SOURCE_PRODUCT_HUNT);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Post>> call, Throwable t) {
-                loadFailed(SourceManager.SOURCE_PRODUCT_HUNT);
-            }
-        });
-        inflight.put(SourceManager.SOURCE_PRODUCT_HUNT, postsCall);
-    }
+//    private void loadProductHunt(final int page) {
+//        // this API's paging is 0 based but this class (& sorting) is 1 based so adjust locally
+//        final Call<List<Post>> postsCall = getProductHuntApi().getPosts(page - 1);
+//        postsCall.enqueue(new Callback<List<Post>>() {
+//            @Override
+//            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
+//                if (response.isSuccessful()) {
+//                    sourceLoaded(response.body(), page, SourceManager.SOURCE_PRODUCT_HUNT);
+//                } else {
+//                    loadFailed(SourceManager.SOURCE_PRODUCT_HUNT);
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<List<Post>> call, Throwable t) {
+//                loadFailed(SourceManager.SOURCE_PRODUCT_HUNT);
+//            }
+//        });
+//        inflight.put(SourceManager.SOURCE_PRODUCT_HUNT, postsCall);
+//    }
 }

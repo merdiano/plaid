@@ -31,6 +31,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -39,12 +40,14 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
+import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -108,7 +111,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private static final int TYPE_PRODUCT_HUNT_POST = 2;
     private static final int TYPE_ORIENT_NEWS_POST = 3;
     private static final int TYPE_LOADING_MORE = -1;
-
+    public static final String TAG = "FeedAdapter";
     // we need to hold on to an activity ref for the shared element transitions :/
     final Activity host;
     private final LayoutInflater layoutInflater;
@@ -282,21 +285,24 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @NonNull
     private OrientNewsHolder createOrientNewsHolder(ViewGroup parent) {
         final OrientNewsHolder holder = new OrientNewsHolder(
-                layoutInflater.inflate(R.layout.orient_news_item, parent, false));
-        holder.image.setBadgeColor(initialGifBadgeColor);
+                layoutInflater.inflate(R.layout.orient_post_item, parent, false));
+        //holder.image.setBadgeColor(initialGifBadgeColor);
 
-        holder.image.setOnClickListener(view -> {
-            Intent intent = new Intent();
-            intent.setClass(host, OrientNewsActivity.class);//todo orient
-            intent.putExtra(DribbbleShot.EXTRA_SHOT,
-                    (News) getItem(holder.getAdapterPosition()));
+        holder.itemView.setOnClickListener(view -> {
+            Bundle b = new Bundle();
+            b.putParcelable(OrientNewsActivity.EXTRA_SHOT,(News) getItem(holder.getAdapterPosition()));
+            Intent intent = new Intent(host,OrientNewsActivity.class);
+            //intent.setClass(host, OrientNewsActivity.class);//todo orient
+            intent.putExtra("bundle",b);
             setGridItemContentTransitions(holder.image);
             ActivityOptions options =
                     ActivityOptions.makeSceneTransitionAnimation(host,
                             Pair.create(view, host.getString(R.string.transition_shot)),
                             Pair.create(view, host.getString(R.string
                                     .transition_shot_background)));
-            host.startActivityForResult(intent, REQUEST_CODE_VIEW_SHOT, options.toBundle());
+//            host.startActivityForResult(intent, REQUEST_CODE_VIEW_SHOT, options.toBundle());
+            host.startActivityForResult(intent, REQUEST_CODE_VIEW_SHOT);
+
         });
         holder.image.setOnTouchListener((v, event) -> {
             // check if it's an event we care about, else bail fast
@@ -340,56 +346,64 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private  void bindOrientNews(final News news, final OrientNewsHolder holder,int position){
         holder.title.setText(news.title);
         holder.title.setAlpha(1f); // interrupted add to pocket anim can mangle
-        GlideApp.with(host)
-                .load(news.thumbnail_images.medium.url)
-                .listener(new RequestListener<Drawable>() {
+        try {
+            String img_url = news.thumbnail_images.thumbnail.url;
+            GlideApp.with(host)
+                    .load(img_url)
+                    .listener(new RequestListener<Drawable>() {
 
-                    @Override
-                    public boolean onResourceReady(Drawable resource, Object model,
-                                                   Target<Drawable> target, DataSource dataSource,
-                                                   boolean isFirstResource) {
-                        if (!news.hasFadedIn) {
-                            holder.image.setHasTransientState(true);
-                            final ObservableColorMatrix cm = new ObservableColorMatrix();
-                            final ObjectAnimator saturation = ObjectAnimator.ofFloat(
-                                    cm, ObservableColorMatrix.SATURATION, 0f, 1f);
-                            saturation.addUpdateListener(valueAnimator -> {
-                                // just animating the color matrix does not invalidate the
-                                // drawable so need this update listener.  Also have to create a
-                                // new CMCF as the matrix is immutable :(
-                                holder.image.setColorFilter(new ColorMatrixColorFilter(cm));
-                            });
-                            saturation.setDuration(2000L);
-                            saturation.setInterpolator(getFastOutSlowInInterpolator(host));
-                            saturation.addListener(new AnimatorListenerAdapter() {
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-                                    holder.image.clearColorFilter();
-                                    holder.image.setHasTransientState(false);
-                                }
-                            });
-                            saturation.start();
-                            news.hasFadedIn = true;
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model,
+                                                       Target<Drawable> target, DataSource dataSource,
+                                                       boolean isFirstResource) {
+                            if (!news.hasFadedIn) {
+                                holder.image.setHasTransientState(true);
+                                final ObservableColorMatrix cm = new ObservableColorMatrix();
+                                final ObjectAnimator saturation = ObjectAnimator.ofFloat(
+                                        cm, ObservableColorMatrix.SATURATION, 0f, 1f);
+                                saturation.addUpdateListener(valueAnimator -> {
+                                    // just animating the color matrix does not invalidate the
+                                    // drawable so need this update listener.  Also have to create a
+                                    // new CMCF as the matrix is immutable :(
+                                    holder.image.setColorFilter(new ColorMatrixColorFilter(cm));
+                                });
+                                saturation.setDuration(2000L);
+                                saturation.setInterpolator(getFastOutSlowInInterpolator(host));
+                                saturation.addListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        holder.image.clearColorFilter();
+                                        holder.image.setHasTransientState(false);
+                                    }
+                                });
+                                saturation.start();
+                                news.hasFadedIn = true;
+                            }
+                            return false;
                         }
-                        return false;
-                    }
 
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model,
-                                                Target<Drawable> target, boolean isFirstResource) {
-                        return false;
-                    }
-                })
-                .placeholder(shotLoadingPlaceholders[position % shotLoadingPlaceholders.length])
-                .diskCacheStrategy(DiskCacheStrategy.DATA)
-                .fitCenter()
-                .transition(withCrossFade())
-                .override(news.thumbnail_images.medium.width, news.thumbnail_images.medium.height)//todo image sizes
-                .into(new DribbbleTarget(holder.image, false));
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model,
+                                                    Target<Drawable> target, boolean isFirstResource) {
+                            return false;
+                        }
+                    })
+                    .placeholder(shotLoadingPlaceholders[position % shotLoadingPlaceholders.length])
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    .fitCenter()
+                    .transition(withCrossFade())
+                    .override(150, 150)//todo image sizes
+                    .into(holder.image);
+        }
+        catch (NullPointerException ex){
+            Log.d(TAG, "bindOrientNews: news image is null");
+        }
+
+
         // need both placeholder & background to prevent seeing through shot as it fades in
         holder.image.setBackground(
                 shotLoadingPlaceholders[position % shotLoadingPlaceholders.length]);
-        holder.image.setDrawBadge(false);
+        //holder.image.setDrawBadge(false);
         // need a unique transition name per shot, let's use it's url
         holder.image.setTransitionName(news.url);
         shotPreloadSizeProvider.setView(holder.image);
@@ -592,9 +606,9 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
      * grid columns.
      */
     void addAndResort(List<? extends PlaidItem> newItems) {
-        weighItems(newItems);
+        //weighItems(newItems);
         deduplicateAndAdd(newItems);
-        sort();
+        //sort();
         expandPopularItems();
         notifyDataSetChanged();
     }
@@ -621,7 +635,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             case SourceManager.SOURCE_ORIENT_TECH:
             case SourceManager.SOURCE_ORIENT_TENDER:
             case SourceManager.SOURCE_ORIENT_WORLD:
-            case SourceManager.SOURCE_PRODUCT_HUNT:
+//            case SourceManager.SOURCE_PRODUCT_HUNT:
             case PlayerShotsDataManager.SOURCE_PLAYER_SHOTS:
             case PlayerShotsDataManager.SOURCE_TEAM_SHOTS:
                 if (naturalOrderWeigher == null) {
@@ -852,7 +866,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     static class OrientNewsHolder extends RecyclerView.ViewHolder implements Divided {
-        @BindView(R.id.news_spacer)BadgedFourThreeImageView image;
+        @BindView(R.id.news_spacer)ImageView image;
         @BindView(R.id.news_title) BaselineGridTextView title;
         public OrientNewsHolder(View itemView) {
             super(itemView);

@@ -25,11 +25,13 @@
         android:icon="@drawable/ic_search_24dp"
         android:showAsAction="always" />
 
-    <item
-        android:id="@+id/menu_filter"
-        android:title="@string/filter"
-        android:icon="@drawable/ic_filter"
-        android:showAsAction="always" />
+    <!--<item-->
+        <!--android:id="@+id/menu_filter"-->
+        <!---->
+        <!--android:title="@string/filter"-->
+        <!--android:icon="@drawable/ic_filter"-->
+
+        <!--android:showAsAction="always" />-->
 
     <!--<item-->
         <!--android:id="@+id/menu_dribbble_login"-->

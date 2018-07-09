@@ -25,6 +25,7 @@
     <io.plaidapp.ui.widget.BaselineGridTextView
         android:id="@+id/shot_title"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_columnSpan="3"
         android:layout_marginBottom="@dimen/spacing_large"
         android:background="@color/light_grey"
@@ -37,6 +38,8 @@
 
     <io.plaidapp.ui.widget.BaselineGridTextView
         android:id="@+id/shot_description"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
         android:layout_columnSpan="3"
         android:paddingEnd="@dimen/padding_normal"
         android:paddingStart="@dimen/padding_normal"

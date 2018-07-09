@@ -64,6 +64,7 @@ android {
 }
 
 repositories {
+    maven { url 'https://jitpack.io' }
     jcenter{
         url "http://jcenter.bintray.com"
     }
@@ -72,10 +73,13 @@ repositories {
     maven {
         url 'https://maven.google.com'
     }
+
 }
 
 dependencies {
+    implementation 'com.github.Commit451:ElasticDragDismissLayout:1.0.4'
     implementation 'androidx.core:core-ktx:0.1'
+
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation "com.android.support:customtabs:${versions.supportLibrary}"
     implementation "com.android.support:design:${versions.supportLibrary}"

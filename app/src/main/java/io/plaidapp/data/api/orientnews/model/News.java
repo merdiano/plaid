@@ -22,19 +22,21 @@ public class News extends PlaidItem implements Parcelable{
     public final String excerpt;
     public final String thumbnail;
     public final User author;
+    public final int views;
     // todo move this into a decorator
     public boolean hasFadedIn = false;
     public final Images thumbnail_images;
     //public final boolean animated;
     public Spanned parsedDescription;
     public News(long id, String title, String url, Date created_at, String content,String excerpt,
-                String thumbnail,User author,Images thumbnail_images) {
+                String thumbnail,User author,int views,Images thumbnail_images) {
         super(id, title, url);
         this.date = created_at;
         this.content = content;
         this.excerpt = excerpt;
         this.thumbnail = thumbnail;
         this.author = author;
+        this.views = views;
         this.thumbnail_images = thumbnail_images;
 
     }
@@ -48,6 +50,7 @@ public class News extends PlaidItem implements Parcelable{
         thumbnail = in.readString();
         hasFadedIn = in.readByte() != 0x00;
         author =  (User)in.readValue(User.class.getClassLoader());
+        views = in.readInt();
         thumbnail_images = (Images) in.readValue(Images.class.getClassLoader());
 
     }
@@ -80,15 +83,19 @@ public class News extends PlaidItem implements Parcelable{
         dest.writeString(thumbnail);
         dest.writeByte((byte) (hasFadedIn ? 0x01 : 0x00));
         dest.writeValue(author);
+        dest.writeInt(views);
         dest.writeValue(thumbnail_images);
 
     }
     public Spanned getParsedDescription(ColorStateList linkTextColor,
                                         @ColorInt int linkHighlightColor) {
-        if (parsedDescription == null && !TextUtils.isEmpty(excerpt)) {
-            parsedDescription = DribbbleUtils.parseDribbbleHtml(excerpt, linkTextColor,
-                    linkHighlightColor);
-        }
-        return parsedDescription;
+
+           if (parsedDescription == null && !TextUtils.isEmpty(content)) {
+               parsedDescription = DribbbleUtils.parseDribbbleHtml(content, linkTextColor,
+                       linkHighlightColor);
+           }
+           return parsedDescription;
+
+
     }
 }

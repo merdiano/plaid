@@ -40,7 +40,7 @@
             android:id="@+id/search_background"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/background_dark" />
+            android:background="@color/primary_dark" />
 
         <SearchView
             android:id="@+id/search_view"
@@ -75,7 +75,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="?android:actionBarSize"
-        android:background="@color/background_dark"
+        android:background="@color/primary_dark"
         android:elevation="@dimen/z_app_bar">
 
         <ProgressBar

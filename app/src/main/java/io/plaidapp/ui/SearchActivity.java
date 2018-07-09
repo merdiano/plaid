@@ -24,6 +24,7 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.TransitionRes;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
@@ -68,7 +69,7 @@ import io.plaidapp.ui.transitions.CircularReveal;
 import io.plaidapp.util.ImeUtils;
 import io.plaidapp.util.TransitionUtils;
 
-public class SearchActivity extends Activity {
+public class SearchActivity extends AppCompatActivity {
 
     public static final String EXTRA_QUERY = "EXTRA_QUERY";
     public static final String EXTRA_SAVE_DRIBBBLE = "EXTRA_SAVE_DRIBBBLE";
