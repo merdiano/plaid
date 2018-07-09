@@ -34,6 +34,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -132,7 +133,7 @@ public class HomeActivity extends Activity {
     private DesignerNewsPrefs designerNewsPrefs;
     private DribbblePrefs dribbblePrefs;
     private OrientPrefs orientPrefs;
-
+    List<? extends PlaidItem> posts;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -173,6 +174,7 @@ public class HomeActivity extends Activity {
         dataManager = new DataManager(this, filtersAdapter) {
             @Override
             public void onDataLoaded(List<? extends PlaidItem> data) {
+                posts = data;
                 adapter.addAndResort(data);
                 checkEmptyState();
             }
@@ -272,11 +274,25 @@ public class HomeActivity extends Activity {
         checkEmptyState();
     }
 
+
+
     @Override
     protected void onResume() {
         super.onResume();
         dribbblePrefs.addLoginStatusListener(filtersAdapter);
         checkConnectivity();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("posts", (ArrayList<? extends Parcelable>) posts);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        posts = savedInstanceState.getParcelableArrayList("posts");
     }
 
     @Override
@@ -288,6 +304,7 @@ public class HomeActivity extends Activity {
             connectivityManager.unregisterNetworkCallback(connectivityCallback);
             monitoringConnectivity = false;
         }
+
         super.onPause();
     }
 
@@ -326,20 +343,20 @@ public class HomeActivity extends Activity {
         return true;
     }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
+//    @Override
+//    public boolean onPrepareOptionsMenu(Menu menu) {
 //        final MenuItem dribbbleLogin = menu.findItem(R.id.menu_dribbble_login);
 //        if (dribbbleLogin != null) {
 //            dribbbleLogin.setTitle(dribbblePrefs.isLoggedIn() ?
 //                    R.string.dribbble_log_out : R.string.dribbble_login);
 //        }
-        final MenuItem designerNewsLogin = menu.findItem(R.id.menu_designer_news_login);
-        if (designerNewsLogin != null) {
-            designerNewsLogin.setTitle(designerNewsPrefs.isLoggedIn() ?
-                    R.string.designer_news_log_out : R.string.designer_news_login);
-        }
-        return true;
-    }
+//        final MenuItem designerNewsLogin = menu.findItem(R.id.menu_designer_news_login);
+//        if (designerNewsLogin != null) {
+//            designerNewsLogin.setTitle(designerNewsPrefs.isLoggedIn() ?
+//                    R.string.designer_news_log_out : R.string.designer_news_login);
+//        }
+//        return true;
+//    }
 
 //    @OnClick(R.id.btn_filter)
 //    protected void onFilterClick(View view){
@@ -367,16 +384,16 @@ public class HomeActivity extends Activity {
 //                            .LENGTH_SHORT).show();
 //                }
 //                return true;
-            case R.id.menu_designer_news_login:
-                if (!designerNewsPrefs.isLoggedIn()) {
-                    startActivity(new Intent(this, DesignerNewsLogin.class));
-                } else {
-                    designerNewsPrefs.logout(HomeActivity.this);
-                    // TODO something better than a toast!!
-                    Toast.makeText(getApplicationContext(), R.string.designer_news_logged_out,
-                            Toast.LENGTH_SHORT).show();
-                }
-                return true;
+//            case R.id.menu_designer_news_login:
+//                if (!designerNewsPrefs.isLoggedIn()) {
+//                    startActivity(new Intent(this, DesignerNewsLogin.class));
+//                } else {
+//                    designerNewsPrefs.logout(HomeActivity.this);
+//                    // TODO something better than a toast!!
+//                    Toast.makeText(getApplicationContext(), R.string.designer_news_logged_out,
+//                            Toast.LENGTH_SHORT).show();
+//                }
+//                return true;
 //            case R.id.menu_about:
 //                startActivity(new Intent(HomeActivity.this, AboutActivity.class),
 //                        ActivityOptions.makeSceneTransitionAnimation(this).toBundle());

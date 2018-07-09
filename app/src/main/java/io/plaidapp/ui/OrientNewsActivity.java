@@ -4,15 +4,20 @@ import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityOptions;
+import android.app.Dialog;
 import android.app.assist.AssistContent;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.AnimatedVectorDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
@@ -29,16 +34,24 @@ import android.transition.TransitionManager;
 import android.util.Log;
 import android.util.Pair;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.view.WindowManager;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toolbar;
 
@@ -157,6 +170,7 @@ public class OrientNewsActivity extends Activity {
         playerAvatar = shotDescription.findViewById(R.id.player_avatar);
         shotTimeAgo = shotDescription.findViewById(R.id.shot_time_ago);
         webDesc = shotDescription.findViewById(R.id.web_description);
+        webDesc.setBackgroundColor(getResources().getColor(R.color.light_grey));
         setupCommenting();
         commentsList.addOnScrollListener(scrollListener);
         commentsList.setOnFlingListener(flingListener);
@@ -171,6 +185,7 @@ public class OrientNewsActivity extends Activity {
         setActionBar(toolbar);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
+        getActionBar().setDisplayShowTitleEnabled(false);
 
         final Intent intent = getIntent();
         Bundle b = intent.getBundleExtra("bundle");
@@ -237,6 +252,7 @@ public class OrientNewsActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.fontAction){
+            showTextAdjustDialog();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -465,89 +481,88 @@ public class OrientNewsActivity extends Activity {
                 Uri.parse(url));
     }
 
-    private RequestListener<Drawable> shotLoadListener = new RequestListener<Drawable>() {
-        @Override
-        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target,
-                                       DataSource dataSource, boolean isFirstResource) {
-            final Bitmap bitmap = GlideUtils.getBitmap(resource);
-            if (bitmap == null) return false;
-            final int twentyFourDip = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                    24, OrientNewsActivity.this.getResources().getDisplayMetrics());
-            Palette.from(bitmap)
-                    .maximumColorCount(3)
-                    .clearFilters() /* by default palette ignore certain hues
-                        (e.g. pure black/white) but we don't want this. */
-                    .setRegion(0, 0, bitmap.getWidth() - 1, twentyFourDip) /* - 1 to work around
-                        https://code.google.com/p/android/issues/detail?id=191013 */
-                    .generate(palette -> {
-                        boolean isDark;
-                        @ColorUtils.Lightness int lightness = ColorUtils.isDark(palette);
-                        if (lightness == ColorUtils.LIGHTNESS_UNKNOWN) {
-                            isDark = ColorUtils.isDark(bitmap, bitmap.getWidth() / 2, 0);
-                        } else {
-                            isDark = lightness == ColorUtils.IS_DARK;
-                        }
-
-//                        if (!isDark) { // make back icon dark on light thumbnail_images
-//                            back.setColorFilter(ContextCompat.getColor(
-//                                    OrientNewsActivity.this, R.color.dark_icon));
+//    private RequestListener<Drawable> shotLoadListener = new RequestListener<Drawable>() {
+//        @Override
+//        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target,
+//                                       DataSource dataSource, boolean isFirstResource) {
+//            final Bitmap bitmap = GlideUtils.getBitmap(resource);
+//            if (bitmap == null) return false;
+//            final int twentyFourDip = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+//                    24, OrientNewsActivity.this.getResources().getDisplayMetrics());
+//            Palette.from(bitmap)
+//                    .maximumColorCount(3)
+//                    .clearFilters() /* by default palette ignore certain hues
+//                        (e.g. pure black/white) but we don't want this. */
+//                    .setRegion(0, 0, bitmap.getWidth() - 1, twentyFourDip) /* - 1 to work around
+//                        https://code.google.com/p/android/issues/detail?id=191013 */
+//                    .generate(palette -> {
+//                        boolean isDark;
+//                        @ColorUtils.Lightness int lightness = ColorUtils.isDark(palette);
+//                        if (lightness == ColorUtils.LIGHTNESS_UNKNOWN) {
+//                            isDark = ColorUtils.isDark(bitmap, bitmap.getWidth() / 2, 0);
+//                        } else {
+//                            isDark = lightness == ColorUtils.IS_DARK;
 //                        }
-
-                        // color the status bar. Set a complementary dark color on L,
-                        // light or dark color on M (with matching status bar icons)
-                        int statusBarColor = getWindow().getStatusBarColor();
-                        final Palette.Swatch topColor =
-                                ColorUtils.getMostPopulousSwatch(palette);
-                        if (topColor != null &&
-                                (isDark || Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)) {
-                            statusBarColor = ColorUtils.scrimify(topColor.getRgb(),
-                                    isDark, SCRIM_ADJUSTMENT);
-                            // set a light status bar on M+
-//                            if (!isDark && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                                ViewUtils.setLightStatusBar(imageView);
-//                            }
-                        }
-
-                        if (statusBarColor != getWindow().getStatusBarColor()) {
-//                            imageView.setScrimColor(statusBarColor);
-                            ValueAnimator statusBarColorAnim = ValueAnimator.ofArgb(
-                                    getWindow().getStatusBarColor(), statusBarColor);
-                            statusBarColorAnim.addUpdateListener(animation -> getWindow().setStatusBarColor(
-                                    (int) animation.getAnimatedValue()));
-                            statusBarColorAnim.setDuration(1000L);
-                            statusBarColorAnim.setInterpolator(
-                                    getFastOutSlowInInterpolator(OrientNewsActivity.this));
-                            statusBarColorAnim.start();
-                        }
-                    });
-
-            Palette.from(bitmap)
-                    .clearFilters()
-                    .generate(palette -> {
-                        // color the ripple on the image spacer (default is grey)
-                        shotSpacer.setBackground(
-                                ViewUtils.createRipple(palette, 0.25f, 0.5f,
-                                        ContextCompat.getColor(OrientNewsActivity.this, R.color.mid_grey),
-                                        true));
-                        // slightly more opaque ripple on the pinned image to compensate
-                        // for the scrim
-//                        imageView.setForeground(
-//                                ViewUtils.createRipple(palette, 0.3f, 0.6f,
+//
+////                        if (!isDark) { // make back icon dark on light thumbnail_images
+////                            back.setColorFilter(ContextCompat.getColor(
+////                                    OrientNewsActivity.this, R.color.dark_icon));
+////                        }
+//
+//                        // color the status bar. Set a complementary dark color on L,
+//                        // light or dark color on M (with matching status bar icons)
+//                        int statusBarColor = getWindow().getStatusBarColor();
+//                        final Palette.Swatch topColor =
+//                                ColorUtils.getMostPopulousSwatch(palette);
+//                        if (topColor != null &&
+//                                (isDark || Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)) {
+//                            statusBarColor = ColorUtils.scrimify(topColor.getRgb(),
+//                                    isDark, SCRIM_ADJUSTMENT);
+//                            // set a light status bar on M+
+////                            if (!isDark && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+////                                ViewUtils.setLightStatusBar(imageView);
+////                            }
+//                        }
+//
+//                        if (statusBarColor != getWindow().getStatusBarColor()) {
+////                            imageView.setScrimColor(statusBarColor);
+//                            ValueAnimator statusBarColorAnim = ValueAnimator.ofArgb(
+//                                    getWindow().getStatusBarColor(), statusBarColor);
+//                            statusBarColorAnim.addUpdateListener(animation -> getWindow().setStatusBarColor(
+//                                    (int) animation.getAnimatedValue()));
+//                            statusBarColorAnim.setDuration(1000L);
+//                            statusBarColorAnim.setInterpolator(
+//                                    getFastOutSlowInInterpolator(OrientNewsActivity.this));
+//                            statusBarColorAnim.start();
+//                        }
+//                    });
+//
+//            Palette.from(bitmap)
+//                    .clearFilters()
+//                    .generate(palette -> {
+//                        // color the ripple on the image spacer (default is grey)
+//                        shotSpacer.setBackground(
+//                                ViewUtils.createRipple(palette, 0.25f, 0.5f,
 //                                        ContextCompat.getColor(OrientNewsActivity.this, R.color.mid_grey),
 //                                        true));
-                    });
-
-            // TODO should keep the background if the image contains transparency?!
-//            imageView.setBackground(null);
-            return false;
-        }
-
-        @Override
-        public boolean onLoadFailed(@Nullable GlideException e, Object model,
-                                    Target<Drawable> target, boolean isFirstResource) {
-            return false;
-        }
-    };
+//                        // slightly more opaque ripple on the pinned image to compensate
+//                        // for the scrim
+////                        imageView.setForeground(
+////                                ViewUtils.createRipple(palette, 0.3f, 0.6f,
+////                                        ContextCompat.getColor(OrientNewsActivity.this, R.color.mid_grey),
+////                                        true));
+//                    });
+//
+//            // TODO should keep the background if the image contains transparency?!
+////            imageView.setBackground(null);
+//            return false;
+//        }
+//        @Override
+//        public boolean onLoadFailed(@Nullable GlideException e, Object model,
+//                                    Target<Drawable> target, boolean isFirstResource) {
+//            return false;
+//        }
+//    };
 
 //    private View.OnFocusChangeListener enterCommentFocus = new View.OnFocusChangeListener() {
 //        @Override
@@ -724,6 +739,121 @@ public class OrientNewsActivity extends Activity {
 //        }
     }
 
+    SeekBar fontSize,brightness;
+    Switch nightmode;
+    boolean nModeOn = false;
+    private void showTextAdjustDialog(){
+
+        final Dialog dialog = new Dialog(OrientNewsActivity.this);
+        dialog.setContentView(R.layout.text_adjust_dialog);
+        fontSize = dialog.findViewById(R.id.font_size);
+        brightness = dialog.findViewById(R.id.brightness);
+        nightmode = dialog.findViewById(R.id.nightmode);
+        nightmode.setChecked(nModeOn);
+        WebSettings settings = webDesc.getSettings();
+        fontSize.setProgress(settings.getTextZoom());
+        int bright =0;
+        try {
+            bright = android.provider.Settings.System.getInt(getContentResolver(),
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS);
+        } catch (Settings.SettingNotFoundException e) {
+            Log.e("Error", "Cannot access system brightness");
+            e.printStackTrace();
+        }
+
+        brightness.setProgress(bright);
+        fontSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                settings.setTextZoom(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        brightness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                try {
+                    android.provider.Settings.System.putInt(getContentResolver(),
+                            android.provider.Settings.System.SCREEN_BRIGHTNESS,
+                            progress);
+                }
+                catch (Exception e) {
+                    Log.e("Error", "Cannot access system brightness");
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        nightmode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                String htmlData = "<style type='text/css'> img {max-width: 100%;height:initial;}</style>";
+                MenuItem menuItem = toolbar.getMenu().getItem(0);
+                nModeOn = isChecked;
+                if(isChecked) {
+                    webDesc.setBackgroundColor(Color.BLACK);
+                    htmlData += "<font color='white'>" + news.content + "</font>";
+                    title.setBackgroundColor(Color.BLACK);
+                    ((TextView)title).setTextColor(Color.WHITE);
+                    toolbar.setBackgroundColor(Color.BLACK);
+                    getActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+                    menuItem.setIcon(R.drawable.ic_font_white);
+                }
+                else
+                {
+                    webDesc.setBackgroundColor(getResources().getColor(R.color.light_grey));
+                    htmlData += "<font color='black'>" + news.content + "</font>";
+                    title.setBackgroundColor(getResources().getColor(R.color.light_grey));
+                    ((TextView)title).setTextColor(getResources().getColor(R.color.text_primary_dark));
+                    toolbar.setBackgroundColor(Color.WHITE);
+                    getActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_back_black);
+                    menuItem.setIcon(R.drawable.ic_font_solid);
+                }
+                webDesc.loadData(htmlData, "text/html; charset=utf-8", "utf-8");
+            }
+        });
+
+        Window window = dialog.getWindow();
+        WindowManager.LayoutParams wlp = window.getAttributes();
+
+        wlp.gravity = Gravity.TOP | Gravity.RIGHT;
+        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+
+        TypedValue tv = new TypedValue();
+        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
+        {
+            int actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+            wlp.y  = wlp.y+actionBarHeight;
+        }
+
+        window.setAttributes(wlp);
+
+//        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+//        window.setBackgroundDrawableResource(R.drawable.ic_comment_add);
+        dialog.show();
+
+    }
     class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         private static final int EXPAND = 0x1;

@@ -57,6 +57,7 @@
         android:paddingEnd="@dimen/padding_normal"
         android:paddingStart="@dimen/padding_normal"
         android:paddingTop="@dimen/padding_normal"
+        android:background="@color/light_grey"
         android:textAppearance="@style/TextAppearance.DribbbleShotDescription"
         android:textColorHighlight="@color/dribbble_link_highlight"
         android:textColorLink="@color/dribbble_links"/>
